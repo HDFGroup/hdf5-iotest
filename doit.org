@@ -13,14 +13,21 @@
     #+BEGIN_SRC emacs-lisp :results none
     (setq myvars (make-hash-table :test 'equal))
     (puthash "default" "no match found" myvars)
-    (puthash "foo" 10 myvars)
-    (puthash "bar" 100 myvars)
+    (puthash "greetings" "Hello, World!" myvars)
     #+END_SRC
 
     #+name: myx
     #+BEGIN_SRC emacs-lisp :results value scalar :noweb-ref myvars :var key="default"
     (gethash key myvars)
     #+END_SRC
+
+    #+begin_src sh :noweb yes :results output
+    echo <<myx(key="greetings")>>
+    #+end_src
+
+    #+begin_src emacs-lisp :noweb yes :results value
+    (message <<myx(key="greetings")>>)
+    #+end_src
 
 * Phase 1: Data Gathering
 ** Environment
