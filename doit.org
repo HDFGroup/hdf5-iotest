@@ -1,0 +1,175 @@
+#+TITLE: HDF5 I/O Test Log Book
+#+DATE: [2020-07-23 Thu]
+#+AUTHOR: Gerd Heber
+#+EMAIL: gheber@hdfgroup.org
+
+#+SETUPFILE: https://raw.githubusercontent.com/fniessen/org-html-themes/master/setup/theme-readtheorg.setup
+
+#+PROPERTY: header-args :eval never-export
+#+PROPERTY: header-args:sh :prologue exec 2>&1 :epilogue:
+
+* Global Configuration
+
+    #+BEGIN_SRC emacs-lisp :results none
+    (setq myvars (make-hash-table :test 'equal))
+    (puthash "default" "no match found" myvars)
+    (puthash "foo" 10 myvars)
+    (puthash "bar" 100 myvars)
+    #+END_SRC
+
+    #+name: myx
+    #+BEGIN_SRC emacs-lisp :results value scalar :noweb-ref myvars :var key="default"
+    (gethash key myvars)
+    #+END_SRC
+
+* Phase 1: Data Gathering
+** Environment
+*** Emacs + Org
+    #+BEGIN_SRC emacs-lisp -n :exports both :eval yes
+    (princ (concat
+            (format "Emacs version: %s\n"
+                    (emacs-version))
+            (format "org version: %s\n"
+                    (org-version))))
+    #+END_SRC
+
+*** File system
+    #+begin_src sh :results output
+    make -C src -f Makefile whats_mounted
+    #+end_src
+
+    #+begin_src sh :results verbatim
+    make -C src -f Makefile block_devs
+    #+end_src
+
+*** Versions
+**** OS
+     #+begin_src sh  :results output
+     make -C src -f Makefile os_info
+     #+end_src
+
+**** GCC
+     #+BEGIN_SRC sh :results verbatim
+     make -C src -f Makefile cc_info
+     #+END_SRC
+
+**** MPI
+     #+begin_src shell :results verbatim
+     make -C src -f Makefile mpi_info
+     #+end_src
+
+**** HDF5
+     #+begin_src sh :results output
+     make -C src -f Makefile hdf5_version
+     #+end_src
+
+** System performance
+*** System specifications and acceptance test results
+*** Fio
+    #+begin_src sh :noweb yes :results verbatim
+    make -C src -f Makefile run_fio
+    #+end_src
+*** IOR
+*** =h5perf=
+** Application documentation
+*** Goals and expectations
+    - [ ] Describe the application
+    - [ ] Document performance goals
+    - [ ] Perform back-of-the-envelope calculations
+    - [ ] Document qualitative behavior expectations
+
+      #+begin_src sh :noweb yes :results output
+      make -C src -f Makefile veryclean all
+      #+end_src
+
+*** Baseline
+    - [ ] Document the sequential application baseline
+    - [ ] Document the parallel application baseline(s)
+      - Strong and weak scaling
+    - [ ] Capture the outputs of =h5dump -pBH= and =h5stat=
+
+**** Sequential
+
+     #+begin_src sh :results file :file src/baseline.ini
+     cat <<EOF
+     [DEFAULT]
+     version = 0                ; Let's keep an open mind!
+     steps = 20                 ; Number of steps
+     arrays = 500               ; Number of arrays
+     rows = 100                 ; Total number of array rows for strong scaling
+                                ; Number of array rows per block for weak scaling
+     columns = 200              ; Total number of array columns for strong scaling
+                                ; Number of array columns per block for weak scaling
+     process-rows = 1           ; Number of MPI-process rows:
+                                ; rows % proc-rows == 0 for strong scalingx
+     process-columns = 1        ; Number of MPI-process columns:
+                                ; columns % proc-columns == 0 for strong scaling
+     scaling = weak             ; Scaling ([weak, strong])
+     dataset-rank = 4           ; Rank of the dataset(s) in the file ([2, 3, 4])
+     slowest-dimension = step   ; Slowest changing dimension ([step, array])
+     layout = contiguous        ; HDF5 dataset layout ([contiguous, chunked])
+     mpi-io = independent       ; MPI I/O mode ([independent, collective])
+     hdf5-file = hdf5_iotest.h5 ; HDF5 output file name
+     csv-file = hdf5_iotest.csv ; CSV results file name
+     EOF
+     #+end_src
+
+     #+begin_src sh :results output
+      make -C src -f Makefile baseline
+     #+end_src
+
+     #+begin_src sh :noweb yes :results output
+      make -C src -f Makefile h5dump
+     #+end_src
+
+     #+begin_src sh :noweb yes :results output
+      make -C src -f Makefile h5stat
+     #+end_src
+
+***** Profiles
+****** =gperf=
+       #+begin_src sh :noweb yes :results output
+       make -C src -f Makefile gprofile
+       #+end_src
+
+****** Darshan
+       #+begin_src sh :noweb yes :results output
+       make -C src -f Makefile darshan
+       #+end_src
+
+****** Recorder
+**** Parallel
+
+*** Symptoms
+    - [ ] Document user concerns and observations
+    - [ ] Confirm their reproducibility
+
+* Phase 2: Analysis / Diagnosis
+    - [ ] Visualize the data
+    - [ ] If the data does not confirm your expectations document what you
+          didn't expect.
+    - [ ] Look for telltale signs indicative of performance problems
+          - =gperf=
+          - Darshan
+          - Recorder
+    - [ ] Document your observations
+* Phase 3: Performance Improvement Plan
+** Goal Setting
+** Low-hanging Fruit
+   - PFS Settings
+   - MPI-IO Hints
+   - HDF5 Settings
+** Hypothesis Testing
+
+* Phase 4: Execution
+** Traps and Pitfalls
+*** Unobserved Variables
+*** Complex Explanations
+**** Occam’s Razor
+*** Paths of Diminishing Returns
+** Stopping Criteria
+** Documentation
+
+* Conclusion
+
+* Appendix
