@@ -1,19 +1,10 @@
-
 CC = mpicc
-HDF5_DIR ?= /home/gerdheber/.local
-DARSHAN_DIR ?= /home/gerdheber/.local
-PROFILER_LIB_DIR ?= /usr/lib/x86_64-linux-gnu
 
 CFLAGS = -Wextra -O2 -I$(HDF5_DIR)/include
 
 LDFLAGS := ${LDFLAGS}
 LDFLAGS += -L${HDF5_DIR}/lib -lhdf5 \
 	   -Wl,-no-as-needed -L$(PROFILER_LIB_DIR) -lprofiler
-
-OBJECTS := hdf5_iotest.o ini.o dataset.o configuration.o
-
-OUTPUT_PATH := pprof
-
 
 SHELL := bash
 .ONESHELL:
