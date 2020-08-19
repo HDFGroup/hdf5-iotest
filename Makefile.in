@@ -1,3 +1,6 @@
+DARSHAN_LOGS = `$(DARSHAN_DIR)/bin/darshan-config --log-path`
+DATE = `date '+%Y/%-m/%d'`
+
 CC = mpicc
 
 CFLAGS = -Wextra -O2 -I$(HDF5_DIR)/include
@@ -90,6 +93,6 @@ out/darshan: build dirs
 > cp src/hdf5_iotest.ini out
 > cd out
 > LD_PRELOAD=$(DARSHAN_DIR)/lib/libdarshan.so:$(HDF5_DIR)/lib/libhdf5.so \
->   DARSHAN_LOG_DIR=/tmp ./hdf5_iotest ./hdf5_iotest.ini
+>   ./hdf5_iotest ./hdf5_iotest.ini
 > cd ..
-> $(DARSHAN_DIR)/bin/darshan-parser --all /tmp/*.darshan > $@
+> $(DARSHAN_DIR)/bin/darshan-parser --all "$(DARSHAN_LOGS)/$(DATE)/*.darshan" > $@
