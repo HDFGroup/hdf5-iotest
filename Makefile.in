@@ -95,4 +95,4 @@ out/darshan: build dirs
 > LD_PRELOAD=$(DARSHAN_DIR)/lib/libdarshan.so:$(HDF5_DIR)/lib/libhdf5.so \
 >   ./hdf5_iotest ./hdf5_iotest.ini
 > cd ..
-> $(DARSHAN_DIR)/bin/darshan-parser --all "$(DARSHAN_LOGS)/$(DATE)/*.darshan" > $@
+> $(DARSHAN_DIR)/bin/darshan-parser --all $(DARSHAN_LOGS)/$(DATE)/*.darshan > $@
