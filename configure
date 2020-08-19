@@ -53,8 +53,8 @@ fi
 
 echo 'generating makefile ...'
 echo "PREFIX = $prefix" >Makefile
-echo "DARSHAN_DIR = $darshan" >Makefile
-echo "PROFILER_LIB_DIR = $gperf" >Makefile
-echo "HDF5_DIR = $hdf5" >Makefile
+echo "DARSHAN_DIR = $darshan" >>Makefile
+echo "PROFILER_LIB_DIR = $gperf" >>Makefile
+echo "HDF5_DIR = $hdf5" >>Makefile
 cat Makefile.in >>Makefile
 echo 'configuration complete, type make to build.'
