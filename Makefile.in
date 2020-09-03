@@ -28,11 +28,14 @@ dirs:
 > mkdir -p out tmp
 
 csrc = $(shell find src -name *.c)
+ini = src/hdf5_iotest.ini src/combinator.sh
 obj = $(csrc:.c=.o)
 
 out/hdf5_iotest: $(obj)
 > mkdir -p $(@D)
 > $(CC) -o $@ $^ $(LDFLAGS)
+> cp $@ $(PREFIX)/bin
+> cp $(ini) $(PREFIX)/bin
 
 clean:
 > rm -rf src/*.o
