@@ -5,8 +5,6 @@ gcloud compute instances create gcloud-instance \
   --machine-type n2-standard-8 \
   --local-ssd interface=nvme \
   --local-ssd interface=nvme \
-  --local-ssd interface=nvme \
-  --local-ssd interface=nvme \
   --image-project ubuntu-os-cloud \
   --image-family ubuntu-minimal-2004-lts \
   --preemptible --address 34.121.21.163 \

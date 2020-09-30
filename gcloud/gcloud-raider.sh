@@ -2,7 +2,7 @@
 #
 # Create a RAID-0 volume
 sudo mdadm --create /dev/md0 --level=0 --raid-devices=4 \
-  /dev/nvme0n1 /dev/nvme0n2 /dev/nvme0n3 /dev/nvme0n4
+  /dev/nvme0n1 /dev/nvme0n2
 
 sudo mkfs.ext4 -F /dev/md0
 
