@@ -21,7 +21,7 @@ cd $HOME/darshan/darshan-runtime
 make -j8
 make install
 cd $HOME/darshan/darshan-util
-./configure --prefix=$HOME/.local
+./configure --prefix=$HOME/.local --enable-shared
 make -j8
 make install
 cd $HOME/darshan/darshan-util/pydarshan
