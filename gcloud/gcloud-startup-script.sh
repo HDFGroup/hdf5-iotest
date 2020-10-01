@@ -33,6 +33,10 @@ function install_default_env {
     apt-get install --assume-yes $PACKAGES $EXTRA_PACKAGES
 }
 
+popular_python() {
+  pip3 install virtualenv matplotlib h5py pandas bokeh prettytable
+}
+
 function mount_scratch { # args DEVICE MOUNT_POINT
   declare device="$1" mount_point="$2"
   [[ "$FORMAT_SCRATCH" = "yes" ]] && \
