@@ -86,7 +86,12 @@ hid_t create_dataset(const configuration* config, hid_t file, const char* name)
 
   assert((dcpl = H5Pcreate(H5P_DATASET_CREATE)) >= 0);
   if (chunked_flg)
+  {
     assert(H5Pset_chunk(dcpl, config->rank, cdims) >= 0);
+#ifdef NO_CHUNK_INIT
+    assert(H5Pset_fill_time(dcpl, H5D_FILL_TIME_NEVER) >= 0);
+#endif
+  }
 
   assert((lcpl = H5Pcreate(H5P_LINK_CREATE)) >= 0);
   assert(H5Pset_create_intermediate_group(lcpl, 1) >= 0);
