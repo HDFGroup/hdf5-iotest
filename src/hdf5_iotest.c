@@ -16,6 +16,7 @@
 #include "hdf5.h"
 
 #include <assert.h>
+#include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -34,7 +35,7 @@ int main(int argc, char* argv[])
   unsigned long my_rows, my_cols;
   unsigned int istep, iarray;
   double *wbuf, *rbuf;
-  size_t i;
+  size_t i, j;
 
   hid_t mspace, dxpl, fapl, file, dset, fspace;
   char path[255];
@@ -46,6 +47,19 @@ int main(int argc, char* argv[])
   double min_write_time, max_write_time;
   double min_read_phase, max_read_phase;
   double min_read_time, max_read_time;
+
+#ifdef VERIFY_DATA
+  /* Extent of the logical 4D array and partition origin/offset */
+  size_t d[4], o[4];
+
+  /*
+   * The C-order of an index [i0, i1, i2, i3] in a 4D array of extent
+   * [D0, D1, D2, D3] is ((i0*D1 + i1)*D2 + i2)*D3 + i3.
+   *
+   * The extent depends on the kind of scaling and, in parallel, we need
+   * to adjust the indices by the partition origin/offset.
+   */
+#endif
 
   MPI_Init(&argc, &argv);
   MPI_Comm_size(MPI_COMM_WORLD, &size);
@@ -89,6 +103,14 @@ int main(int argc, char* argv[])
   wbuf = (double*) malloc(my_rows*my_cols*sizeof(double));
   rbuf = (double*) calloc(my_rows*my_cols, sizeof(double));
 
+#ifdef VERIFY_DATA
+  d[2] = strong_scaling_flg ? config.rows : config.rows * config.proc_rows;
+  d[3] = strong_scaling_flg ? config.cols : config.cols * config.proc_cols;
+
+  o[2] = strong_scaling_flg ? rank * my_rows : my_proc_row * config.rows;
+  o[3] = strong_scaling_flg ? rank * my_cols : my_proc_col * config.cols;
+#endif
+
   for (i = 0; i < (size_t)my_rows*my_cols; ++i)
     wbuf[i] = (double) (my_proc_row + my_proc_col);
 
@@ -122,11 +144,13 @@ int main(int argc, char* argv[])
                              fapl)) >= 0);
     create_time += MPI_Wtime();
 
+    // TODO: Fix the step vs. array distinction in the rank 4 case.
+
     switch (config.rank)
       {
       case 4:
         {
-          /* one 4D array */
+          /* a single 4D array */
           create_time -= MPI_Wtime();
           assert((dset = create_dataset(&config, file, "dataset")) >= 0);
           create_time += MPI_Wtime();
@@ -135,6 +159,19 @@ int main(int argc, char* argv[])
             {
               for (iarray = 0; iarray < config.arrays; ++iarray)
                 {
+#ifdef VERIFY_DATA
+                  d[0] = config.steps; d[1] = config.arrays;
+                  o[0] = istep; o[1] = iarray;
+
+                  // TODO: introduce a generic initialization function
+                  // init_write_buffer(my_rows, my_cols, o, d);
+
+                  for (i = 0; i < (size_t)my_rows; ++i)
+                    for (j = 0; j < (size_t)my_cols; ++j)
+                        wbuf[i*my_cols + j] =
+                          (double) (((o[0]*d[1] + o[1])*d[2] + o[2] + i)*d[3] + o[3] + j);
+#endif
+
                   assert((fspace = H5Dget_space(dset)) >= 0);
                   create_selection(&config, fspace, my_proc_row, my_proc_col,
                                    istep, iarray);
@@ -286,6 +323,20 @@ int main(int argc, char* argv[])
                                  rbuf) >= 0);
                   read_time += MPI_Wtime();
                   assert(H5Sclose(fspace) >= 0);
+
+#ifdef VERIFY_DATA
+                  d[0] = config.steps; d[1] = config.arrays;
+                  o[0] = istep; o[1] = iarray;
+
+                  // TODO: introduce a generic verification function
+                  // verify_read_buffer(my_rows, my_cols, o, d);
+
+                  for (i = 0; i < (size_t)my_rows; ++i)
+                    for (j = 0; j < (size_t)my_cols; ++j)
+                      assert(fabs(rbuf[i*my_cols + j] -
+                                  (double) (((o[0]*d[1] + o[1])*d[2] + o[2] + i)*d[3] + o[3] + j))
+                             < 1.e-12);
+#endif
                 }
             }
 
