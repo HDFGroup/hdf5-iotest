@@ -1,2 +1,2 @@
 # hdf5-iotest
-HDF5 Performance Analysis Checklist
+A simple I/O Performance tester for HDF5
