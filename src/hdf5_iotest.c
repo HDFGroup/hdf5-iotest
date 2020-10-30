@@ -1,3 +1,4 @@
+
 /* hdf5-iotest -- simple I/O performance tester for HDF5
 
    SPDX-License-Identifier: BSD-3-Clause

@@ -23,6 +23,43 @@
  *
  */
 
+int check_options(configuration* pconfig, const char* section, const char* name, const char* value)
+{
+#define MATCH(s, n) strcmp(section, s) == 0 && strcmp(name, n) == 0
+
+  if (MATCH(section, "steps")) {
+    pconfig->steps = (unsigned int) atoi(value);
+  } else if (MATCH(section, "arrays")) {
+    pconfig->arrays = (unsigned int) atoi(value);
+  } else if (MATCH(section, "rows")) {
+    pconfig->rows = (unsigned long) atol(value);
+  } else if (MATCH(section, "columns")) {
+    pconfig->cols = (unsigned long) atol(value);
+  } else if (MATCH(section, "process-rows")) {
+    pconfig->proc_rows = (unsigned int) atoi(value);
+  } else if (MATCH(section, "process-columns")) {
+    pconfig->proc_cols = (unsigned int) atoi(value);
+  } else if (MATCH(section, "scaling")) {
+    strncpy(pconfig->scaling, value, 16);
+  } else if (MATCH(section, "dataset-rank")) {
+    pconfig->rank = (unsigned int) atoi(value);
+  } else if (MATCH(section, "slowest-dimension")) {
+    strncpy(pconfig->slowest_dimension, value, 16);
+  } else if (MATCH(section, "layout")) {
+    strncpy(pconfig->layout, value, 16);
+  } else if (MATCH(section, "fill-chunks")) {
+    strncpy(pconfig->fill_chunks, value, 8);
+  } else if (MATCH(section, "mpi-io")) {
+    strncpy(pconfig->mpi_io, value, 16);
+  } else if (MATCH(section, "hdf5-file")) {
+    strncpy(pconfig->hdf5_file, value, PATH_MAX);
+  } else if (MATCH(section, "csv-file")) {
+    strncpy(pconfig->csv_file, value, PATH_MAX);
+  } else {
+    return 0;  /* unknown name, error */
+  }
+}
+
 int handler(void* user,
             const char* section,
             const char* name,
@@ -30,74 +67,16 @@ int handler(void* user,
 {
   configuration* pconfig = (configuration*)user;
 
-#define MATCH(s, n) strcmp(section, s) == 0 && strcmp(name, n) == 0
-
   if (strncmp(section, "DEFAULT", 7) == 0)
     {
-      if (MATCH("DEFAULT", "version")) {
+      if (strcmp(section, "DEFAULT") == 0 && strcmp(name, "version") == 0)
         pconfig->version = atoi(value);
-      } else if (MATCH("DEFAULT", "steps")) {
-        pconfig->steps = (unsigned int) atoi(value);
-      } else if (MATCH("DEFAULT", "arrays")) {
-        pconfig->arrays = (unsigned int) atoi(value);
-      } else if (MATCH("DEFAULT", "rows")) {
-        pconfig->rows = (unsigned long) atol(value);
-      } else if (MATCH("DEFAULT", "columns")) {
-        pconfig->cols = (unsigned long) atol(value);
-      } else if (MATCH("DEFAULT", "process-rows")) {
-        pconfig->proc_rows = (unsigned int) atoi(value);
-      } else if (MATCH("DEFAULT", "process-columns")) {
-        pconfig->proc_cols = (unsigned int) atoi(value);
-      } else if (MATCH("DEFAULT", "scaling")) {
-        strncpy(pconfig->scaling, value, 16);
-      } else if (MATCH("DEFAULT", "dataset-rank")) {
-        pconfig->rank = (unsigned int) atoi(value);
-      } else if (MATCH("DEFAULT", "slowest-dimension")) {
-        strncpy(pconfig->slowest_dimension, value, 16);
-      } else if (MATCH("DEFAULT", "layout")) {
-        strncpy(pconfig->layout, value, 16);
-      } else if (MATCH("DEFAULT", "mpi-io")) {
-        strncpy(pconfig->mpi_io, value, 16);
-      } else if (MATCH("DEFAULT", "hdf5-file")) {
-        strncpy(pconfig->hdf5_file, value, PATH_MAX);
-      } else if (MATCH("DEFAULT", "csv-file")) {
-        strncpy(pconfig->csv_file, value, PATH_MAX);
-      } else {
-        return 0;  /* unknown section/name, error */
-      }
-
+      else
+        check_options(pconfig, "DEFAULT", name, value);
     }
   else
     {
-      if (MATCH(section, "steps")) {
-        pconfig->steps = (unsigned int) atoi(value);
-      } else if (MATCH(section, "arrays")) {
-        pconfig->arrays = (unsigned int) atoi(value);
-      } else if (MATCH(section, "rows")) {
-        pconfig->rows = (unsigned long) atol(value);
-      } else if (MATCH(section, "columns")) {
-        pconfig->cols = (unsigned long) atol(value);
-      } else if (MATCH(section, "process-rows")) {
-        pconfig->proc_rows = (unsigned int) atoi(value);
-      } else if (MATCH(section, "process-columns")) {
-        pconfig->proc_cols = (unsigned int) atoi(value);
-      } else if (MATCH(section, "scaling")) {
-        strncpy(pconfig->scaling, value, 16);
-      } else if (MATCH(section, "dataset-rank")) {
-        pconfig->rank = (unsigned int) atoi(value);
-      } else if (MATCH(section, "slowest-dimension")) {
-        strncpy(pconfig->slowest_dimension, value, 16);
-      } else if (MATCH(section, "layout")) {
-        strncpy(pconfig->layout, value, 16);
-      } else if (MATCH(section, "mpi-io")) {
-        strncpy(pconfig->mpi_io, value, 16);
-      } else if (MATCH(section, "hdf5-file")) {
-        strncpy(pconfig->hdf5_file, value, PATH_MAX);
-      } else if (MATCH(section, "csv-file")) {
-        strncpy(pconfig->csv_file, value, PATH_MAX);
-      } else {
-        return 0;  /* unknown name, error */
-      }
+      check_options(pconfig, section, name, value);
     }
 
   return 1;
@@ -127,6 +106,8 @@ int sanity_check(void* user)
          strncmp(pconfig->slowest_dimension, "array", 16) == 0);
   assert(strncmp(pconfig->layout, "contiguous", 16) == 0 ||
          strncmp(pconfig->layout, "chunked", 16) == 0);
+  assert(strncmp(pconfig->fill_chunks, "true", 8) == 0 ||
+         strncmp(pconfig->fill_chunks, "false", 8) == 0);
   assert(strncmp(pconfig->mpi_io, "independent", 16) == 0 ||
          strncmp(pconfig->mpi_io, "collective", 16) == 0);
 
