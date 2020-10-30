@@ -107,9 +107,9 @@ int main(int argc, char* argv[])
 
   o[2] = strong_scaling_flg ? rank * my_rows : my_proc_row * config.rows;
   o[3] = strong_scaling_flg ? rank * my_cols : my_proc_col * config.cols;
-#endif
 
-#ifndef VERIFY_DATA
+  printf("\nWARNING: Data verification enabled. Timings will be distorted!!!\n");
+#else
   for (i = 0; i < (size_t)my_rows*my_cols; ++i)
     wbuf[i] = (double) (my_proc_row + my_proc_col);
 #endif
