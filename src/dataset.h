@@ -29,4 +29,16 @@ extern int create_selection(const configuration* config,
                             const unsigned int step,
                             const unsigned int array);
 
+extern void init_write_buffer(double wbuf[],
+                              const size_t* my_rows,
+                              const size_t* my_cols,
+                              size_t d[],
+                              size_t o[]);
+
+extern void verify_read_buffer(double* rbuf,
+                               const size_t* my_rows,
+                               const size_t* my_cols,
+                               size_t d[],
+                               size_t o[]);
+
 #endif

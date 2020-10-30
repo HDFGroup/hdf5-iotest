@@ -14,6 +14,7 @@
 #include "dataset.h"
 
 #include <assert.h>
+#include <math.h>
 #include <string.h>
 
 /*
@@ -181,4 +182,23 @@ int create_selection(const configuration* config,
   assert(H5Sselect_hyperslab(fspace, H5S_SELECT_SET, start, NULL, count, block)
          >= 0);
   return result;
+}
+
+void init_write_buffer(double wbuf[], const size_t* my_rows, const size_t* my_cols, size_t d[], size_t o[])
+{
+  size_t i, j;
+  for (i = 0; i < *my_rows; ++i)
+    for (j = 0; j < *my_cols; ++j)
+      wbuf[i*(*my_cols) + j] =
+        (double) (((o[0]*d[1] + o[1])*d[2] + o[2] + i)*d[3] + o[3] + j);
+}
+
+void verify_read_buffer(double* rbuf, const size_t* my_rows, const size_t* my_cols, size_t d[], size_t o[])
+{
+  size_t i, j;
+  for (i = 0; i < *my_rows; ++i)
+    for (j = 0; j < *my_cols; ++j)
+      assert(fabs(rbuf[i*(*my_cols) + j] -
+                  (double) (((o[0]*d[1] + o[1])*d[2] + o[2] + i)*d[3] + o[3] + j))
+             < 1.e-12);
 }

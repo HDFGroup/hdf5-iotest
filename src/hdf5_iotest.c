@@ -16,11 +16,9 @@
 #include "hdf5.h"
 
 #include <assert.h>
-#include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-
 
 #define CONFIG_FILE "hdf5_iotest.ini"
 
@@ -111,8 +109,10 @@ int main(int argc, char* argv[])
   o[3] = strong_scaling_flg ? rank * my_cols : my_proc_col * config.cols;
 #endif
 
+#ifndef VERIFY_DATA
   for (i = 0; i < (size_t)my_rows*my_cols; ++i)
     wbuf[i] = (double) (my_proc_row + my_proc_col);
+#endif
 
   { /* create the in-memory dataspace */
     hsize_t dims[2];
@@ -144,8 +144,6 @@ int main(int argc, char* argv[])
                              fapl)) >= 0);
     create_time += MPI_Wtime();
 
-    // TODO: Fix the step vs. array distinction in the rank 4 case.
-
     switch (config.rank)
       {
       case 4:
@@ -160,18 +158,12 @@ int main(int argc, char* argv[])
               for (iarray = 0; iarray < config.arrays; ++iarray)
                 {
 #ifdef VERIFY_DATA
-                  d[0] = config.steps; d[1] = config.arrays;
-                  o[0] = istep; o[1] = iarray;
-
-                  // TODO: introduce a generic initialization function
-                  // init_write_buffer(my_rows, my_cols, o, d);
-
-                  for (i = 0; i < (size_t)my_rows; ++i)
-                    for (j = 0; j < (size_t)my_cols; ++j)
-                        wbuf[i*my_cols + j] =
-                          (double) (((o[0]*d[1] + o[1])*d[2] + o[2] + i)*d[3] + o[3] + j);
+                  d[0] = step_first_flg ? config.steps : config.arrays;
+                  d[1] = step_first_flg ? config.arrays : config.steps;
+                  o[0] = step_first_flg ? istep : iarray;
+                  o[1] = step_first_flg ? iarray : istep;
+                  init_write_buffer(wbuf, &my_rows, &my_cols, d, o);
 #endif
-
                   assert((fspace = H5Dget_space(dset)) >= 0);
                   create_selection(&config, fspace, my_proc_row, my_proc_col,
                                    istep, iarray);
@@ -201,6 +193,11 @@ int main(int argc, char* argv[])
 
                   for (iarray = 0; iarray < config.arrays; ++iarray)
                     {
+#ifdef VERIFY_DATA
+                      d[0] = config.steps; d[1] = config.arrays;
+                      o[0] = istep; o[1] = iarray;
+                      init_write_buffer(wbuf, &my_rows, &my_cols, d, o);
+#endif
                       assert((fspace = H5Dget_space(dset)) >= 0);
                       create_selection(&config, fspace, my_proc_row,
                                        my_proc_col, istep, iarray);
@@ -237,7 +234,11 @@ int main(int argc, char* argv[])
                                  0);
                           create_time += MPI_Wtime();
                         }
-
+#ifdef VERIFY_DATA
+                      d[0] = config.arrays; d[1] = config.steps;
+                      o[0] = iarray; o[1] = istep;
+                      init_write_buffer(wbuf, &my_rows, &my_cols, d, o);
+#endif
                       assert((fspace = H5Dget_space(dset)) >= 0);
                       create_selection(&config, fspace, my_proc_row,
                                        my_proc_col, istep, iarray);
@@ -272,6 +273,14 @@ int main(int argc, char* argv[])
                           (step_first_flg ? iarray : istep));
                   assert((dset = create_dataset(&config, file, path)) >= 0);
                   create_time += MPI_Wtime();
+
+#ifdef VERIFY_DATA
+                  d[0] = step_first_flg ? config.steps : config.arrays;
+                  d[1] = step_first_flg ? config.arrays : config.steps;
+                  o[0] = step_first_flg ? istep : iarray;
+                  o[1] = step_first_flg ? iarray : istep;
+                  init_write_buffer(wbuf, &my_rows, &my_cols, d, o);
+#endif
 
                   assert((fspace = H5Dget_space(dset)) >= 0);
                   create_selection(&config, fspace, my_proc_row, my_proc_col,
@@ -325,17 +334,11 @@ int main(int argc, char* argv[])
                   assert(H5Sclose(fspace) >= 0);
 
 #ifdef VERIFY_DATA
-                  d[0] = config.steps; d[1] = config.arrays;
-                  o[0] = istep; o[1] = iarray;
-
-                  // TODO: introduce a generic verification function
-                  // verify_read_buffer(my_rows, my_cols, o, d);
-
-                  for (i = 0; i < (size_t)my_rows; ++i)
-                    for (j = 0; j < (size_t)my_cols; ++j)
-                      assert(fabs(rbuf[i*my_cols + j] -
-                                  (double) (((o[0]*d[1] + o[1])*d[2] + o[2] + i)*d[3] + o[3] + j))
-                             < 1.e-12);
+                  d[0] = step_first_flg ? config.steps : config.arrays;
+                  d[1] = step_first_flg ? config.arrays : config.steps;
+                  o[0] = step_first_flg ? istep : iarray;
+                  o[1] = step_first_flg ? iarray : istep;
+                  verify_read_buffer(rbuf, &my_rows, &my_cols, d, o);
 #endif
                 }
             }
@@ -363,10 +366,16 @@ int main(int argc, char* argv[])
                                      dxpl, rbuf) >= 0);
                       read_time += MPI_Wtime();
 
+#ifdef VERIFY_DATA
+                      d[0] = config.steps; d[1] = config.arrays;
+                      o[0] = istep; o[1] = iarray;
+                      verify_read_buffer(rbuf, &my_rows, &my_cols, d, o);
+#endif
                     }
 
                   assert(H5Sclose(fspace) >= 0);
                   assert(H5Dclose(dset) >= 0);
+
                 }
             }
           else /* dataset per array */
@@ -388,6 +397,12 @@ int main(int argc, char* argv[])
 
                       assert(H5Sclose(fspace) >= 0);
                       assert(H5Dclose(dset) >= 0);
+
+#ifdef VERIFY_DATA
+                      d[0] = config.arrays; d[1] = config.steps;
+                      o[0] = iarray; o[1] = istep;
+                      verify_read_buffer(rbuf, &my_rows, &my_cols, d, o);
+#endif
                     }
                 }
             }
@@ -418,6 +433,14 @@ int main(int argc, char* argv[])
 
                   assert(H5Sclose(fspace) >= 0);
                   assert(H5Dclose(dset) >= 0);
+
+#ifdef VERIFY_DATA
+                  d[0] = step_first_flg ? config.steps : config.arrays;
+                  d[1] = step_first_flg ? config.arrays : config.steps;
+                  o[0] = step_first_flg ? istep : iarray;
+                  o[1] = step_first_flg ? iarray : istep;
+                  verify_read_buffer(rbuf, &my_rows, &my_cols, d, o);
+#endif
                 }
             }
         }
@@ -446,8 +469,6 @@ int main(int argc, char* argv[])
     assert(H5Fget_filesize(file, &fsize) >= 0);
     assert(H5Fclose(file) >= 0);
   }
-
-  // TODO: compare the write and read buffers
 
   free(wbuf);
   free(rbuf);
