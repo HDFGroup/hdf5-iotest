@@ -11,7 +11,6 @@ AS_IF([test "x$enable_gperftools" == "xyes"], [
 ])
 
 AM_INIT_AUTOMAKE([foreign])
-LT_INIT
 
 AC_CONFIG_FILES([Makefile src/Makefile])
 
