@@ -39,12 +39,10 @@ do
           echo "mpi-io = $io"
           echo "hdf5-file = out-$count.h5"
           echo "csv-file = out-$count.csv"
-        } >> $file 
-        out="out-$count.txt"  
-        hdf="out-$count.h5"  
+        } >> $file
+        out="out-$count.txt"
+        hdf="out-$count.h5"
         p=$((prows*pcols))
-        #mpiexec -n $p ./hdf5_iotest $file > $out
-        #rm $hdf $file
         ((++count))
       done
     done
