@@ -1,0 +1,281 @@
+#+TITLE:  HDF5 I/O Test
+#+AUTHOR: Gerd Heber
+#+EMAIL: gheber@hdfgroup.org
+
+#+PROPERTY: header-args :eval never-export
+
+* Description
+
+This is a simple I/O performance tester for HDF5. It's purpose is to assess the
+/performance variability/ of a set of logically equivalent HDF5 representations of
+a common pattern. The test repeatedly writes a set of 2D array variables over a
+set of "time steps." An INI file (see below) controls how the array variables
+are represented in HDF5 and certain other low-level aspects of HDF5 library
+behavior. (See also [[https://github.com/ornladios/ADIOS2/tree/master/source/utils/adios_iotest][ADIOS IOTEST]].)
+
+* Installation
+
+While it can be build manually, we recommend building =hdf5_iotest= from [[https://computing.llnl.gov/projects/spack-hpc-package-manager][Spack]].
+
+1. Create a new Spack package
+   #+begin_src sh
+   spack create --name hdf5iotest
+   #+end_src
+   This creates a boilerplate =package.py= file, which we'll need to edit.
+2. Edit the freshly minted =package.py= via
+   #+begin_src sh
+   spack edit hdf5iotest
+   #+end_src
+   =package.py= should look like this:
+   #+begin_src python
+   # Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+   # Spack Project Developers. See the top-level COPYRIGHT file for details.
+   #
+   # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
+   from spack import *
+
+   class Hdf5iotest(AutotoolsPackage):
+       """
+       A simple I/O performance test for HDF5.
+       Run with 'hdf5_iotest <INI file>'. A sample INI file called
+       hdf5_iotest.ini can be found in the share/hdf5-iotest subdirectory.
+       It is recommended to run multiple configurations. The combinator.sh
+       script in share/hdf5-iotest creates 24 "standard" parameter cominations.
+       """
+
+       homepage = "https://github.com/HDFGroup/hdf5-iotest"
+       git      = "https://github.com/HDFGroup/hdf5-iotest.git"
+
+       maintainers = ['gheber']
+
+       version('master', branch='master')
+
+       depends_on('autoconf', type='build')
+       depends_on('automake', type='build')
+       depends_on('libtool',  type='build')
+       depends_on('m4',       type='build')
+       depends_on('mpi')
+       depends_on('hdf5')
+
+       def configure_args(self):
+           args = []
+           if "+gperftools" not in self.spec:
+               args += ["--enable-gperftools"]
+
+           return args
+
+       def test(self):
+           pass
+   #+end_src
+3. Test the configuration via
+   #+begin_src sh
+   spack spec hdf5iotest
+   #+end_src
+   Sample output can be found in the [[sec:spack-spec-out][appendix]].
+
+* Usage
+
+=hdf5_iotest= accepts a single argument, the name of a configuration file. If no
+configuration file name is provided, it looks for a configuration named
+=hdf5-iotest.ini= in the current working directory.
+
+#+begin_src sh
+hdf5_iotest [INI file]
+#+end_src
+
+The configuration file syntax is shown [[sec:parameters][below]]:
+
+#+begin_src conf-unix :tangle src/hdf5_iotest.ini :noweb no-export
+[DEFAULT]
+<<hdf5-iotest-conf>>
+#+end_src
+
+A complete configuration can be found [[file:src/hdf5-iotest.ini][here]].
+
+** Custom Settings
+Rather than modifying the =[DEFAULT]= section, we recommend that testers create
+a new section, e.g., =[CUSTOM]=, and overwrite the default values as needed.
+
+#+begin_example
+[DEFAULT]
+...
+
+[CUSTOM]
+...
+#+end_example
+
+Any parameter specified in the =[CUSTOM]= section overwrites its =[DEFAULT]=
+counterpart.
+
+For a basic set of 24 custom parameter combinations see the
+[[file:src/combinator.sh]] configuration file generator. Running:
+
+#+begin_src sh
+combinator.sh <prows> <pcols>
+#+end_src
+
+will create 24 configuration files for a =prows x pcols= topology of MPI
+processes.
+
+** Parameters<<sec:parameters>>
+The following configuration parameters are supported.
+*** Version
+The HDF5 I/O test configuration version:
+#+begin_src conf-unix :noweb-ref hdf5-iotest-conf
+version = 0
+#+end_src
+Currently, 0 is the only valid version.
+
+*** Steps
+The number of steps or repetitions, a positive integer.
+#+begin_src conf-unix :noweb-ref hdf5-iotest-conf :tangle no
+steps = 20
+#+end_src
+
+*** Number of 2D Array Variables
+The number of 2D array variables to be written, a positive integer.
+#+begin_src conf-unix :noweb-ref hdf5-iotest-conf :tangle no
+arrays = 500
+#+end_src
+
+*** Array Rows
+HDF5 I/O test can be run in /strong/ or /weak/ scaling mode (see [[sec:scaling][below]]). For /strong/
+scaling, this is the total number (across all MPI ranks) of rows of each 2D
+array variable. For /weak/ scaling, this is the number of rows per MPI process per
+2D array variable.
+#+begin_src conf-unix :noweb-ref hdf5-iotest-conf :tangle no
+rows = 100
+#+end_src
+
+*** Array Columns
+HDF5 I/O test can be run in /strong/ or /weak/ scaling mode (see [[sec:scaling][below]]). For /strong/
+scaling, this is the total number (across all MPI ranks) of columns of each 2D
+array variable. For /weak/ scaling, this is the number of columns per MPI process
+per 2D array variable.
+#+begin_src conf-unix :noweb-ref hdf5-iotest-conf :tangle no
+columns = 200
+#+end_src
+
+*** Number of MPI Process Rows
+HDF5 I/O test is run over a logical 2D grid of MPI processes. This is the number
+of MPI process rows.
+#+begin_src conf-unix :noweb-ref hdf5-iotest-conf :tangle no
+process-rows = 1
+#+end_src
+
+For strong scaling, the =rows= must be divisible by =process-rows=.
+
+*** Number of MPI Process Columns
+HDF5 I/O test is run over a logical 2D grid of MPI processes. This is the number
+of MPI process columns.
+#+begin_src conf-unix :noweb-ref hdf5-iotest-conf :tangle no
+process-columns = 1
+#+end_src
+
+For strong scaling, the =columns= parameter must be divisible by =process-columns=.
+
+*** Scaling<<sec:scaling>>
+HDF5 I/O test can be run with strong or weak scaling. In /strong scaling/ mode,
+the total amount of data written and read is independent of the number of MPI
+processes, i.e., the per process I/O share diminishes with an increase in the
+number of I/O processes. In /weak scaling/ mode, the amount of data written and
+read by each MPI-process is kept constant, and the total I/O increases with the
+number of MPI processes.
+#+begin_src conf-unix :noweb-ref hdf5-iotest-conf :tangle no
+scaling = weak
+#+end_src
+
+*** Dataset Rank
+HDF5 I/O test can combine the 2D array variables into a global 4D dataset,
+multiple 3D datasets, or individual 2D datasets, in the HDF5 file.
+#+begin_src conf-unix :noweb-ref hdf5-iotest-conf :tangle no
+dataset-rank = 4
+#+end_src
+
+*** Slowest Dimension
+Since multiple array variables are written in multiple steps, and the two counts
+can be very different, we have to chose an "iteration" order.
+#+begin_src conf-unix :noweb-ref hdf5-iotest-conf :tangle no
+slowest-dimension = step
+#+end_src
+
+*** Dataset Layout
+The storage layout in the HDF5 file can be chunked or contiguous.
+#+begin_src conf-unix :noweb-ref hdf5-iotest-conf :tangle no
+layout = contiguous
+#+end_src
+
+In the current implementation, the chunk size is fixed, but will be configurable
+in a future version.
+
+*** Chunk Initialization with Fill Values
+For chunked storage layout, the default behavior of the HDF5 library is to
+initialize the chunks with the default or a user-specified fill value.  This
+incurs additional I/O and may reduce performance. Use this flag to control
+chunk initialization.
+#+begin_src conf-unix :noweb-ref hdf5-iotest-conf :tangle no
+fill-chunks = true
+#+end_src
+
+*** MPI I/O Operations
+With MPI, the write and read operation can be collective or independent.
+#+begin_src conf-unix :noweb-ref hdf5-iotest-conf :tangle no
+mpi-io = independent
+#+end_src
+
+This setting has no effect for a single MPI process.
+
+*** HDF5 Output File Name
+The default HDF5 output file name is =hdf5_iotest.h5=. Use this parameter to
+select a different name.
+#+begin_src conf-unix :noweb-ref hdf5-iotest-conf :tangle no
+hdf5-file = hdf5_iotest.h5
+#+end_src
+
+*** Results File
+When running HDF5 I/O test, certain metrics are printed to =stdout=. To simplify
+the analysis of results from multiple runs, they are also written to a CSV file
+whose name is configurable.
+#+begin_src conf-unix :noweb-ref hdf5-iotest-conf :tangle no
+csv-file = hdf5_iotest.csv
+#+end_src
+
+* Appendix <<sec:appendix>>
+** Sample =spack spec hdf5iotest= output <<sec:spack-spec-out>>
+#+begin_example
+==> Using specified package name: 'hdf5iotest'
+==> Created template for hdf5iotest package
+==> Created package file: /home/gerdheber/GitHub/spack/var/spack/repos/builtin/packages/hdf5iotest/package.py
+Waiting for Emacs...
+% spack spec hdf5iotest
+Input spec
+--------------------------------
+hdf5iotest
+
+Concretized
+--------------------------------
+hdf5iotest@spack%gcc@8.3.0 arch=linux-debian10-skylake
+ ^autoconf@2.69%gcc@8.3.0 arch=linux-debian10-skylake
+     ^m4@1.4.18%gcc@8.3.0+sigsegv patches=3877ab548f88597ab2327a2230ee048d2d07ace1062efe81fc92e91b7f39cd00,fc9b61654a3ba1a8d6cd78ce087e7c96366c290bc8d2c299f09828d793b853c8 arch=linux-debian10-skylake
+         ^libsigsegv@2.12%gcc@8.3.0 arch=linux-debian10-skylake
+     ^perl@5.32.0%gcc@8.3.0+cpanm+shared+threads arch=linux-debian10-skylake
+         ^berkeley-db@18.1.40%gcc@8.3.0 arch=linux-debian10-skylake
+         ^gdbm@1.18.1%gcc@8.3.0 arch=linux-debian10-skylake
+             ^readline@8.0%gcc@8.3.0 arch=linux-debian10-skylake
+                 ^ncurses@6.2%gcc@8.3.0~symlinks+termlib arch=linux-debian10-skylake
+                     ^pkgconf@1.7.3%gcc@8.3.0 arch=linux-debian10-skylake
+ ^automake@1.16.3%gcc@8.3.0 arch=linux-debian10-skylake
+ ^hdf5@1.10.7%gcc@8.3.0~cxx~debug~fortran~hl~java+mpi+pic+shared~szip~threadsafe api=none arch=linux-debian10-skylake
+     ^openmpi@4.0.5%gcc@8.3.0~atomics~cuda~cxx~cxx_exceptions+gpfs~java~legacylaunchers~lustre~memchecker~pmi~singularity~sqlite3+static~thread_multiple+vt+wrapper-rpath fabrics=none schedulers=none arch=linux-debian10-skylake
+         ^hwloc@2.2.0%gcc@8.3.0~cairo~cuda~gl~libudev+libxml2~netloc~nvml+pci+shared arch=linux-debian10-skylake
+             ^libpciaccess@0.16%gcc@8.3.0 arch=linux-debian10-skylake
+                 ^libtool@2.4.6%gcc@8.3.0 arch=linux-debian10-skylake
+                 ^util-macros@1.19.1%gcc@8.3.0 arch=linux-debian10-skylake
+             ^libxml2@2.9.10%gcc@8.3.0~python arch=linux-debian10-skylake
+                 ^libiconv@1.16%gcc@8.3.0 arch=linux-debian10-skylake
+                 ^xz@5.2.5%gcc@8.3.0~pic arch=linux-debian10-skylake
+                 ^zlib@1.2.11%gcc@8.3.0+optimize+pic+shared arch=linux-debian10-skylake
+         ^numactl@2.0.14%gcc@8.3.0 patches=4e1d78cbbb85de625bad28705e748856033eaafab92a66dffd383a3d7e00cc94 arch=linux-debian10-skylake
+#+end_example
+** Sample Output
