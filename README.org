@@ -91,7 +91,7 @@ The configuration file syntax is shown [[sec:parameters][below]]:
 <<hdf5-iotest-conf>>
 #+end_src
 
-A complete configuration can be found [[file:src/hdf5-iotest.ini][here]].
+A complete configuration can be found [[file:./blob/spack/src/hdf5_iotest.ini][here]].
 
 ** Custom Settings
 Rather than modifying the =[DEFAULT]= section, we recommend that testers create
