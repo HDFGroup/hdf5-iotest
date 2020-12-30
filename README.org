@@ -91,7 +91,7 @@ The configuration file syntax is shown [[sec:parameters][below]]:
 <<hdf5-iotest-conf>>
 #+end_src
 
-A complete configuration can be found [[file:./blob/spack/src/hdf5_iotest.ini][here]].
+A complete configuration can be found [[https://raw.githubusercontent.com/HDFGroup/hdf5-iotest/master/src/hdf5_iotest.ini][here]].
 
 ** Custom Settings
 Rather than modifying the =[DEFAULT]= section, we recommend that testers create
@@ -108,8 +108,8 @@ a new section, e.g., =[CUSTOM]=, and overwrite the default values as needed.
 Any parameter specified in the =[CUSTOM]= section overwrites its =[DEFAULT]=
 counterpart.
 
-For a basic set of 24 custom parameter combinations see the
-[[file:src/combinator.sh]] configuration file generator. Running:
+For a basic set of 24 custom parameter combinations see the [[https://raw.githubusercontent.com/HDFGroup/hdf5-iotest/master/src/combinator.sh][combinator.sh]]
+configuration file generator. Running:
 
 #+begin_src sh
 combinator.sh <prows> <pcols>
