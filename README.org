@@ -1,6 +1,7 @@
 #+TITLE:  HDF5 I/O Test
 #+AUTHOR: Gerd Heber
 #+EMAIL: gheber@hdfgroup.org
+#+DATE: [2020-12-30 Wed]
 
 #+PROPERTY: header-args :eval never-export
 
