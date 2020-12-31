@@ -99,12 +99,14 @@ hid_t create_dataset(const configuration* config, hid_t file, const char* name)
   assert((fspace = H5Screate_simple(config->rank, dims, max_dims)) >= 0);
 
   assert((dcpl = H5Pcreate(H5P_DATASET_CREATE)) >= 0);
+
+  if (strncmp(config->fill_values, "false", 8) == 0)
+    assert(H5Pset_fill_time(dcpl, H5D_FILL_TIME_NEVER) >= 0);
+  else
+    assert(H5Pset_fill_time(dcpl, H5D_FILL_TIME_ALLOC) >= 0);
+
   if (chunked_flg)
-  {
     assert(H5Pset_chunk(dcpl, config->rank, cdims) >= 0);
-    if (strncmp(config->fill_chunks, "false", 8) == 0)
-      assert(H5Pset_fill_time(dcpl, H5D_FILL_TIME_NEVER) >= 0);
-  }
 
   assert((lcpl = H5Pcreate(H5P_LINK_CREATE)) >= 0);
   assert(H5Pset_create_intermediate_group(lcpl, 1) >= 0);

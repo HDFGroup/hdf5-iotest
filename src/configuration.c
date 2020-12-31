@@ -47,8 +47,8 @@ int check_options(configuration* pconfig, const char* section, const char* name,
     strncpy(pconfig->slowest_dimension, value, 16);
   } else if (MATCH(section, "layout")) {
     strncpy(pconfig->layout, value, 16);
-  } else if (MATCH(section, "fill-chunks")) {
-    strncpy(pconfig->fill_chunks, value, 8);
+  } else if (MATCH(section, "fill-values")) {
+    strncpy(pconfig->fill_values, value, 8);
   } else if (MATCH(section, "mpi-io")) {
     strncpy(pconfig->mpi_io, value, 16);
   } else if (MATCH(section, "hdf5-file")) {
@@ -106,8 +106,8 @@ int sanity_check(void* user)
          strncmp(pconfig->slowest_dimension, "array", 16) == 0);
   assert(strncmp(pconfig->layout, "contiguous", 16) == 0 ||
          strncmp(pconfig->layout, "chunked", 16) == 0);
-  assert(strncmp(pconfig->fill_chunks, "true", 8) == 0 ||
-         strncmp(pconfig->fill_chunks, "false", 8) == 0);
+  assert(strncmp(pconfig->fill_values, "true", 8) == 0 ||
+         strncmp(pconfig->fill_values, "false", 8) == 0);
   assert(strncmp(pconfig->mpi_io, "independent", 16) == 0 ||
          strncmp(pconfig->mpi_io, "collective", 16) == 0);
 

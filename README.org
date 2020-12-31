@@ -75,6 +75,16 @@ While it can be build manually, we recommend building =hdf5_iotest= from [[https
    #+end_src
    Sample output can be found in the [[sec:spack-spec-out][appendix]].
 
+** Installation w/o Spack
+You need a working installation of parallel HDF5 (which depends on MPI).
+
+#+begin_src sh
+./autogen.sh
+CC=h5cc ./configure --prefix=<installation directory>
+HDF5_CC=mpicc make
+make install
+#+end_src
+
 * Usage
 
 =hdf5_iotest= accepts a single argument, the name of a configuration file. If no
@@ -206,13 +216,16 @@ The following configuration parameters are supported.
     In the current implementation, the chunk size is fixed, but will be
     configurable in a future version.
 
-- Chunk Initialization with Fill Values :: For chunked storage layout, the
-     default behavior of the HDF5 library is to initialize the chunks with the
-     default or a user-specified fill value.  This incurs additional I/O and may
-     reduce performance. Use this flag to control chunk initialization.
+- Initialization with Fill Values :: The default behavior of the HDF5 library is
+     to initialize storage with the default or a user-specified fill value.
+     This incurs additional I/O and may reduce performance. Use this flag to
+     enable (=true=) or disable (=false=) storage initialization with fill values.
     #+begin_src conf-unix :noweb-ref hdf5-iotest-conf
- fill-chunks = true
+ fill-values = true
     #+end_src
+
+    There is a third behavior (=H5D_FILL_TIME_IFSET=), but the point here is to
+     demonstrate the additional cost of initialization with fill values.
 
 - MPI I/O Operations :: With MPI, the write and read operation can be collective
      or independent.
@@ -278,8 +291,8 @@ The CSV output looks like this. It's then easy to concatenate several of these
 (after stripping out the header), and load them into [[https://pandas.pydata.org/][pandas]] or [[https://www.r-project.org/][R]].
 
 #+begin_example
-steps,arrays,rows,cols,scaling,proc-rows,proc-cols,slowdim,rank,layout,mpi-io,wall [s],fsize [B],write-phase-min [s],write-phase-max [s],creat-min [s],creat-max [s],write-min [s],write-max [s],write-rate-min [MiB/s],write-rate-max [MiB/s],read-phase-min [s],read-phase-max [s],read-min [s],read-max [s],read-rate-min [MiB/s],read-rate-max [MiB/s]
-20,500,100,200,weak,1,1,step,3,contiguous,collective,11.21,1600008192,5.61,5.61,0.00,0.00,5.07,5.07,300.89,300.89,5.59,5.59,4.84,4.84,315.41,315.41
+steps,arrays,rows,cols,scaling,proc-rows,proc-cols,slowdim,rank,layout,fill,mpi-io,wall [s],fsize [B],write-phase-min [s],write-phase-max [s],creat-min [s],creat-max [s],write-min [s],write-max [s],write-rate-min [MiB/s],write-rate-max [MiB/s],read-phase-min [s],read-phase-max [s],read-min [s],read-max [s],read-rate-min [MiB/s],read-rate-max [MiB/s]
+20,500,100,200,weak,1,1,step,4,contiguous,false,independent,3.92,1600002048,3.00,3.00,0.32,0.32,2.45,2.45,623.89,623.89,0.91,0.91,0.84,0.84,1816.58,1816.58
 #+end_example
 
 *** Metrics

@@ -85,7 +85,8 @@ int main(int argc, char* argv[])
       printf("\tproc-grid=%dx%d, slowest-dimension=%s, rank=%d\n",
              config.proc_rows, config.proc_cols, config.slowest_dimension,
              config.rank);
-      printf("\tlayout=%s, mpi-io=%s\n", config.layout, config.mpi_io);
+      printf("\tlayout=%s, fill=%s, mpi-io=%s\n",
+             config.layout, config.fill_values, config.mpi_io);
     }
 
   /* broadcast the input parameters */
@@ -533,16 +534,19 @@ int main(int argc, char* argv[])
       /* write results CSV file */
       FILE *fptr = fopen(config.csv_file, "w");
       assert(fptr != NULL);
-      fprintf(fptr, "steps,arrays,rows,cols,scaling,proc-rows,proc-cols,slowdim,rank,layout,mpi-io,wall [s],fsize [B],write-phase-min [s],write-phase-max [s],creat-min [s],creat-max [s],write-min [s],write-max [s],write-rate-min [MiB/s],write-rate-max [MiB/s],read-phase-min [s],read-phase-max [s],read-min [s],read-max [s],read-rate-min [MiB/s],read-rate-max [MiB/s]\n");
+      fprintf(fptr, "steps,arrays,rows,cols,scaling,proc-rows,proc-cols,slowdim,rank,layout,fill,mpi-io,wall [s],fsize [B],write-phase-min [s],write-phase-max [s],creat-min [s],creat-max [s],write-min [s],write-max [s],write-rate-min [MiB/s],write-rate-max [MiB/s],read-phase-min [s],read-phase-max [s],read-min [s],read-max [s],read-rate-min [MiB/s],read-rate-max [MiB/s]\n");
       fprintf(fptr,
-      "%d,%d,%ld,%ld,%s,%d,%d,%s,%d,%s,%s,%.2f,%.0f,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f\n",
+      "%d,%d,%ld,%ld,%s,%d,%d,%s,%d,%s,%s,%s,%.2f,%.0f,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f\n",
               config.steps, config.arrays, config.rows, config.cols,
               config.scaling, config.proc_rows, config.proc_cols,
               config.slowest_dimension, config.rank, config.layout,
-              config.mpi_io, wall_time, (double)fsize, min_write_phase,
-              max_write_phase, min_create_time, max_create_time,
-              min_write_time, max_write_time, min_write_rate, max_write_rate,
-              min_read_phase, max_read_phase, min_read_time, max_read_time,
+              config.fill_values, config.mpi_io, wall_time, (double)fsize,
+              min_write_phase, max_write_phase,
+              min_create_time, max_create_time,
+              min_write_time, max_write_time,
+              min_write_rate, max_write_rate,
+              min_read_phase, max_read_phase,
+              min_read_time, max_read_time,
               min_read_rate, max_read_rate);
       fclose(fptr);
     }

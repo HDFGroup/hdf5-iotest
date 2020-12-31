@@ -33,7 +33,7 @@ typedef struct
   unsigned int rank;
   char slowest_dimension[16];
   char layout[16];
-  char fill_chunks[8];
+  char fill_values[8];
   char mpi_io[16];
   char hdf5_file[PATH_MAX];
   char csv_file[PATH_MAX];
