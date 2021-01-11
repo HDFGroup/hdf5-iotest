@@ -304,8 +304,8 @@ The CSV output looks like this. It's then easy to concatenate several of these
 (after stripping out the header), and load them into [[https://pandas.pydata.org/][pandas]] or [[https://www.r-project.org/][R]].
 
 #+begin_example
-steps,arrays,rows,cols,scaling,proc-rows,proc-cols,slowdim,rank,layout,fill,mpi-io,wall [s],fsize [B],write-phase-min [s],write-phase-max [s],creat-min [s],creat-max [s],write-min [s],write-max [s],write-rate-min [MiB/s],write-rate-max [MiB/s],read-phase-min [s],read-phase-max [s],read-min [s],read-max [s],read-rate-min [MiB/s],read-rate-max [MiB/s]
-20,500,100,200,weak,1,1,step,4,contiguous,false,independent,3.92,1600002048,3.00,3.00,0.32,0.32,2.45,2.45,623.89,623.89,0.91,0.91,0.84,0.84,1816.58,1816.58
+steps,arrays,rows,cols,scaling,proc-rows,proc-cols,slowdim,rank,alignment-increment,alignment-threshold,layout,fill,mpi-io,wall [s],fsize [B],write-phase-min [s],write-phase-max [s],creat-min [s],creat-max [s],write-min [s],write-max [s],write-rate-min [MiB/s],write-rate-max [MiB/s],read-phase-min [s],read-phase-max [s],read-min [s],read-max [s],read-rate-min [MiB/s],read-rate-max [MiB/s]
+20,500,100,200,weak,1,1,step,4,8,1024,contiguous,false,independent,3.20,1600002048,2.44,2.44,0.38,0.38,1.92,1.92,794.18,794.18,0.76,0.76,0.73,0.73,2089.42,2089.42
 #+end_example
 
 *** Metrics

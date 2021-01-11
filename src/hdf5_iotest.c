@@ -85,6 +85,8 @@ int main(int argc, char* argv[])
       printf("\tproc-grid=%dx%d, slowest-dimension=%s, rank=%d\n",
              config.proc_rows, config.proc_cols, config.slowest_dimension,
              config.rank);
+      printf("\talignment-increment=%ld, alignment-threshold=%ld\n",
+             config.alignment_increment, config.alignment_threshold);
       printf("\tlayout=%s, fill=%s, mpi-io=%s\n",
              config.layout, config.fill_values, config.mpi_io);
     }
@@ -135,7 +137,7 @@ int main(int argc, char* argv[])
   assert(H5Pset_fapl_mpio(fapl, MPI_COMM_WORLD, MPI_INFO_NULL) >= 0);
   if (config.alignment_increment > 1)
     assert(H5Pset_alignment(fapl, config.alignment_threshold,
-                            config.alignment_increment));
+                            config.alignment_increment) >= 0);
 
   step_first_flg = (strncmp(config.slowest_dimension, "step", 16) == 0);
 
