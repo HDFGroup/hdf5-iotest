@@ -16,27 +16,31 @@
 
 #include "ini.h"
 
+#include "hdf5.h"
+
 #include <limits.h>
 
 /* Configuration parameters */
 
 typedef struct
 {
-  int version;
-  unsigned int steps;
-  unsigned int arrays;
+  int           version;
+  unsigned int  steps;
+  unsigned int  arrays;
   unsigned long rows;
   unsigned long cols;
-  unsigned int proc_rows;
-  unsigned int proc_cols;
-  char scaling[16];
-  unsigned int rank;
-  char slowest_dimension[16];
-  char layout[16];
-  char fill_values[8];
-  char mpi_io[16];
-  char hdf5_file[PATH_MAX];
-  char csv_file[PATH_MAX];
+  unsigned int  proc_rows;
+  unsigned int  proc_cols;
+  char          scaling[16];
+  unsigned int  rank;
+  char          slowest_dimension[16];
+  hsize_t       alignment_increment;
+  hsize_t       alignment_threshold;
+  char          layout[16];
+  char          fill_values[8];
+  char          mpi_io[16];
+  char          hdf5_file[PATH_MAX];
+  char          csv_file[PATH_MAX];
 } configuration;
 
 extern int handler(void* user,

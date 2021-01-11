@@ -45,6 +45,10 @@ int check_options(configuration* pconfig, const char* section, const char* name,
     pconfig->rank = (unsigned int) atoi(value);
   } else if (MATCH(section, "slowest-dimension")) {
     strncpy(pconfig->slowest_dimension, value, 16);
+  } else if (MATCH(section, "alignment-increment")) {
+    pconfig->alignment_increment = (hsize_t) atol(value);
+  } else if (MATCH(section, "alignment-threshold")) {
+    pconfig->alignment_threshold = (hsize_t) atol(value);
   } else if (MATCH(section, "layout")) {
     strncpy(pconfig->layout, value, 16);
   } else if (MATCH(section, "fill-values")) {

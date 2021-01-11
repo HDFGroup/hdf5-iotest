@@ -157,11 +157,10 @@ The following configuration parameters are supported.
  rows = 100
     #+end_src
 
-- Array Columns :: HDF5 I/O test can be run in /strong/ or /weak/ scaling mode (see
-                   [[sec:scaling][below]]). For /strong/ scaling, this is the total number (across
-                   all MPI ranks) of columns of each 2D array variable. For /weak/
-                   scaling, this is the number of columns per MPI process per 2D
-                   array variable.
+- Array Columns :: HDF5 I/O test can be run in /strong/ or /weak/ scaling mode
+  (see [[sec:scaling][below]]). For /strong/ scaling, this is the total number (across all MPI
+  ranks) of columns of each 2D array variable. For /weak/ scaling, this is the
+  number of columns per MPI process per 2D array variable.
     #+begin_src conf-unix :noweb-ref hdf5-iotest-conf
  columns = 200
     #+end_src
@@ -205,6 +204,20 @@ The following configuration parameters are supported.
      "iteration" order.
     #+begin_src conf-unix :noweb-ref hdf5-iotest-conf
  slowest-dimension = step
+    #+end_src
+
+- Alignment Increment :: Align HDF5 objects greater than or equal to an alignment threshold on addresses which are a multiple of this increment.
+    #+begin_src conf-unix :noweb-ref hdf5-iotest-conf
+ alignment-increment = 1
+    #+end_src
+
+     By default there are no alignment restrictions in effect, and only
+  increments greater than 1 have any effect.
+
+- Alignment Threshold :: The minimum object size (in bytes) for which alignment
+  constraints will be enforced. A threshold of 0 forces everything to be aligned.
+    #+begin_src conf-unix :noweb-ref hdf5-iotest-conf
+ alignment-threshold = 0
     #+end_src
 
 - Dataset Layout :: The storage layout in the HDF5 file can be chunked or

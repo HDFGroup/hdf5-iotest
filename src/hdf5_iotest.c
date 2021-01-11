@@ -133,6 +133,9 @@ int main(int argc, char* argv[])
 
   assert((fapl = H5Pcreate(H5P_FILE_ACCESS)) >= 0);
   assert(H5Pset_fapl_mpio(fapl, MPI_COMM_WORLD, MPI_INFO_NULL) >= 0);
+  if (config.alignment_increment > 1)
+    assert(H5Pset_alignment(fapl, config.alignment_threshold,
+                            config.alignment_increment));
 
   step_first_flg = (strncmp(config.slowest_dimension, "step", 16) == 0);
 
@@ -534,12 +537,14 @@ int main(int argc, char* argv[])
       /* write results CSV file */
       FILE *fptr = fopen(config.csv_file, "w");
       assert(fptr != NULL);
-      fprintf(fptr, "steps,arrays,rows,cols,scaling,proc-rows,proc-cols,slowdim,rank,layout,fill,mpi-io,wall [s],fsize [B],write-phase-min [s],write-phase-max [s],creat-min [s],creat-max [s],write-min [s],write-max [s],write-rate-min [MiB/s],write-rate-max [MiB/s],read-phase-min [s],read-phase-max [s],read-min [s],read-max [s],read-rate-min [MiB/s],read-rate-max [MiB/s]\n");
+      fprintf(fptr, "steps,arrays,rows,cols,scaling,proc-rows,proc-cols,slowdim,rank,alignment-increment,alignment-threshold,layout,fill,mpi-io,wall [s],fsize [B],write-phase-min [s],write-phase-max [s],creat-min [s],creat-max [s],write-min [s],write-max [s],write-rate-min [MiB/s],write-rate-max [MiB/s],read-phase-min [s],read-phase-max [s],read-min [s],read-max [s],read-rate-min [MiB/s],read-rate-max [MiB/s]\n");
       fprintf(fptr,
-      "%d,%d,%ld,%ld,%s,%d,%d,%s,%d,%s,%s,%s,%.2f,%.0f,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f\n",
+      "%d,%d,%ld,%ld,%s,%d,%d,%s,%d,%ld,%ld,%s,%s,%s,%.2f,%.0f,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f\n",
               config.steps, config.arrays, config.rows, config.cols,
               config.scaling, config.proc_rows, config.proc_cols,
-              config.slowest_dimension, config.rank, config.layout,
+              config.slowest_dimension, config.rank,
+              config.alignment_increment, config.alignment_threshold,
+              config.layout,
               config.fill_values, config.mpi_io, wall_time, (double)fsize,
               min_write_phase, max_write_phase,
               min_create_time, max_create_time,
