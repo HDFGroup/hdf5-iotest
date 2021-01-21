@@ -144,15 +144,15 @@ The following configuration parameters are supported.
     #+end_src
 
 - Number of 2D Array Variables :: The number of 2D array variables to be
-     written, a positive integer.
+  written, a positive integer.
     #+begin_src conf-unix :noweb-ref hdf5-iotest-conf
  arrays = 500
     #+end_src
 
 - Array Rows :: HDF5 I/O test can be run in /strong/ or /weak/ scaling mode (see
-                [[sec:scaling][below]]). For /strong/ scaling, this is the total number (across all
-                MPI ranks) of rows of each 2D array variable. For /weak/ scaling,
-                this is the number of rows per MPI process per 2D array variable.
+  [[sec:scaling][below]]). For /strong/ scaling, this is the total number (across all MPI ranks)
+  of rows of each 2D array variable. For /weak/ scaling, this is the number of
+  rows per MPI process per 2D array variable.
     #+begin_src conf-unix :noweb-ref hdf5-iotest-conf
  rows = 100
     #+end_src
@@ -179,34 +179,58 @@ The following configuration parameters are supported.
  process-columns = 1
     #+end_src
 
-    For strong scaling, the =columns= parameter must be divisible by =process-columns=.
+    For strong scaling, the =columns= parameter must be divisible by
+  =process-columns=.
 
 - Scaling<<sec:scaling>> :: HDF5 I/O test can be run with strong or weak
-     scaling. In /strong scaling/ mode, the total amount of data written and read
-     is independent of the number of MPI processes, i.e., the per process I/O
-     share diminishes with an increase in the number of I/O processes. In /weak
-     scaling/ mode, the amount of data written and read by each MPI-process is
-     kept constant, and the total I/O increases with the number of MPI
-     processes.
+  scaling. In /strong scaling/ mode, the total amount of data written and read
+  is independent of the number of MPI processes, i.e., the per process I/O share
+  diminishes with an increase in the number of I/O processes. In /weak scaling/
+  mode, the amount of data written and read by each MPI-process is kept
+  constant, and the total I/O increases with the number of MPI processes.
     #+begin_src conf-unix :noweb-ref hdf5-iotest-conf
- scaling = weak
+    # [weak, strong]
+    scaling = weak
     #+end_src
 
 - Dataset Rank :: HDF5 I/O test can combine the 2D array variables into a global
-                  4D dataset, multiple 3D datasets, or individual 2D datasets,
-                  in the HDF5 file.
+  4D dataset, multiple 3D datasets, or individual 2D datasets, in the HDF5 file.
     #+begin_src conf-unix :noweb-ref hdf5-iotest-conf
- dataset-rank = 4
+    # [2, 3, 4]
+    dataset-rank = 4
     #+end_src
 
 - Slowest Dimension :: Since multiple array variables are written in multiple
-     steps, and the two counts can be very different, we have to chose an
-     "iteration" order.
+  steps, and the two counts can be very different, we have to chose an
+  "iteration" order.
     #+begin_src conf-unix :noweb-ref hdf5-iotest-conf
- slowest-dimension = step
+    # [step, array]
+    slowest-dimension = step
     #+end_src
 
-- Alignment Increment :: Align HDF5 objects greater than or equal to an alignment threshold on addresses which are a multiple of this increment.
+- Lower Library Version Bound :: The HDF5 library uses sets of (file format)
+  micro-versions to control the creation of HDF5 objects. A given library
+  version can be configured to create objects conforming to a set of minimum
+  micro-versions called its /lower/ library version bound. Only certain
+  combinations of lower and upper library version bounds are valid. Please check
+  the documentation of =H5Pset_libversion= for details.
+    #+begin_src conf-unix :noweb-ref hdf5-iotest-conf
+    # [earliest, v18, v110, v112, v114, latest]
+    libver-bound-low = earliest
+    #+end_src
+
+- Upper Library Version Bound :: The HDF5 library uses sets of (file format)
+  micro-versions to control the creation of HDF5 objects. A given library
+  version can be configured to create objects conforming to a set of maximum
+  micro-versions called its /upper/ library version bound. Please check
+  the documentation of =H5Pset_libversion= for details.
+    #+begin_src conf-unix :noweb-ref hdf5-iotest-conf
+    # [v18, v110, v112, v114, latest]
+    libver-bound-high = latest
+    #+end_src
+
+- Alignment Increment :: Align HDF5 objects greater than or equal to an
+  alignment threshold on addresses which are a multiple of this increment.
     #+begin_src conf-unix :noweb-ref hdf5-iotest-conf
  alignment-increment = 1
     #+end_src
@@ -215,7 +239,8 @@ The following configuration parameters are supported.
   increments greater than 1 have any effect.
 
 - Alignment Threshold :: The minimum object size (in bytes) for which alignment
-  constraints will be enforced. A threshold of 0 forces everything to be aligned.
+  constraints will be enforced. A threshold of 0 forces everything to be
+  aligned.
     #+begin_src conf-unix :noweb-ref hdf5-iotest-conf
  alignment-threshold = 0
     #+end_src
@@ -223,18 +248,20 @@ The following configuration parameters are supported.
 - Dataset Layout :: The storage layout in the HDF5 file can be chunked or
                     contiguous.
     #+begin_src conf-unix :noweb-ref hdf5-iotest-conf
- layout = contiguous
+    # [contiguous, chunked]
+    layout = contiguous
     #+end_src
 
     In the current implementation, the chunk size is fixed, but will be
     configurable in a future version.
 
 - Initialization with Fill Values :: The default behavior of the HDF5 library is
-     to initialize storage with the default or a user-specified fill value.
-     This incurs additional I/O and may reduce performance. Use this flag to
-     enable (=true=) or disable (=false=) storage initialization with fill values.
+  to initialize storage with the default or a user-specified fill value.  This
+  incurs additional I/O and may reduce performance. Use this flag to enable
+  (=true=) or disable (=false=) storage initialization with fill values.
     #+begin_src conf-unix :noweb-ref hdf5-iotest-conf
- fill-values = true
+    # [true, false]
+    fill-values = true
     #+end_src
 
     There is a third behavior (=H5D_FILL_TIME_IFSET=), but the point here is to
@@ -243,7 +270,8 @@ The following configuration parameters are supported.
 - MPI I/O Operations :: With MPI, the write and read operation can be collective
      or independent.
     #+begin_src conf-unix :noweb-ref hdf5-iotest-conf
- mpi-io = independent
+    # [collective, independent]
+    mpi-io = independent
     #+end_src
 
     This setting has no effect for a single MPI process.

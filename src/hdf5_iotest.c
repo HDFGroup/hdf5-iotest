@@ -23,6 +23,8 @@
 
 #define CONFIG_FILE "hdf5_iotest.ini"
 
+herr_t set_libver_bounds(configuration* config, hid_t fapl);
+
 int main(int argc, char* argv[])
 {
   const char* ini = (argc > 1) ? argv[1] : CONFIG_FILE;
@@ -138,6 +140,7 @@ int main(int argc, char* argv[])
   if (config.alignment_increment > 1)
     assert(H5Pset_alignment(fapl, config.alignment_threshold,
                             config.alignment_increment) >= 0);
+  assert(set_libver_bounds(&config, fapl) >= 0);
 
   step_first_flg = (strncmp(config.slowest_dimension, "step", 16) == 0);
 
@@ -561,4 +564,92 @@ int main(int argc, char* argv[])
   MPI_Finalize();
 
   return 0;
+}
+
+herr_t set_libver_bounds(configuration* pconfig, hid_t fapl)
+{
+  herr_t result = 0;
+
+  unsigned majnum, minnum, relnum;
+  assert(H5get_libversion(&majnum, &minnum, &relnum) >= 0);
+  printf("HDF5 library version %d.%d.%d\n", majnum, minnum, relnum);
+  assert (majnum == 1 && minnum >= 8 && minnum <= 13);
+
+  H5F_libver_t low = H5F_LIBVER_EARLIEST, high = H5F_LIBVER_LATEST;
+
+  if (strncmp(pconfig->libver_bound_low, "earliest", 16) != 0)
+    {
+      if (minnum < 10) /* HDF5 1.8.x */
+        low = H5F_LIBVER_LATEST;
+
+#if H5_VERSION_GE(1,10,0)
+      if (minnum < 12) /* HDF5 1.10.x */
+        if (strncmp(pconfig->libver_bound_low, "v18", 16) == 0)
+          low = H5F_LIBVER_V18;
+        else
+          low = H5F_LIBVER_LATEST;
+#endif
+
+#if H5_VERSION_GE(1,12,0)
+      if(minnum < 14)  /* HDF5 1.12.x */
+        {
+          if (strncmp(pconfig->libver_bound_low, "v18", 16) == 0)
+            low = H5F_LIBVER_V18;
+          else if (strncmp(pconfig->libver_bound_low, "v110", 16) == 0)
+            low = H5F_LIBVER_V110;
+          else
+            low = H5F_LIBVER_LATEST;
+        }
+#endif
+
+#if H5_VERSION_GE(1,13,0)
+      if(minnum < 16)  /* HDF5 1.13.x */
+        {
+          if (strncmp(pconfig->libver_bound_low, "v18", 16) == 0)
+            low = H5F_LIBVER_V18;
+          else if (strncmp(pconfig->libver_bound_low, "v110", 16) == 0)
+            low = H5F_LIBVER_V110;
+          else if (strncmp(pconfig->libver_bound_low, "v112", 16) == 0)
+            low = H5F_LIBVER_V112;
+          else
+            low = H5F_LIBVER_LATEST;
+        }
+#endif
+    }
+
+  if (strncmp(pconfig->libver_bound_high, "latest", 16) != 0)
+    {
+#if H5_VERSION_GE(1,10,0)
+      if (minnum < 12) /* HDF5 1.10.x */
+        if (strncmp(pconfig->libver_bound_high, "v18", 16) == 0)
+          high = H5F_LIBVER_V18;
+#endif
+
+#if H5_VERSION_GE(1,12,0)
+      if(minnum < 14)  /* HDF5 1.12.x */
+        {
+          if (strncmp(pconfig->libver_bound_high, "v18", 16) == 0)
+            high = H5F_LIBVER_V18;
+          else if (strncmp(pconfig->libver_bound_high, "v110", 16) == 0)
+            high = H5F_LIBVER_V110;
+        }
+#endif
+
+#if H5_VERSION_GE(1,13,0)
+      if(minnum < 16)  /* HDF5 1.13.x */
+        {
+          if (strncmp(pconfig->libver_bound_high, "v18", 16) == 0)
+            high = H5F_LIBVER_V18;
+          else if (strncmp(pconfig->libver_bound_high, "v110", 16) == 0)
+            high = H5F_LIBVER_V110;
+          else if (strncmp(pconfig->libver_bound_high, "v112", 16) == 0)
+            high = H5F_LIBVER_V112;
+        }
+#endif
+    }
+
+  assert(low <= high);
+  assert(H5Pset_libver_bounds(fapl, low, high) >= 0);
+
+  return result;
 }

@@ -45,6 +45,10 @@ int check_options(configuration* pconfig, const char* section, const char* name,
     pconfig->rank = (unsigned int) atoi(value);
   } else if (MATCH(section, "slowest-dimension")) {
     strncpy(pconfig->slowest_dimension, value, 16);
+  } else if (MATCH(section, "libver-bound-low")) {
+    strncpy(pconfig->libver_bound_low, value, 16);
+  } else if (MATCH(section, "libver-bound-high")) {
+    strncpy(pconfig->libver_bound_high, value, 16);
   } else if (MATCH(section, "alignment-increment")) {
     pconfig->alignment_increment = (hsize_t) atol(value);
   } else if (MATCH(section, "alignment-threshold")) {
@@ -106,6 +110,20 @@ int sanity_check(void* user)
   assert(strncmp(pconfig->scaling, "weak", 16) == 0 ||
          strncmp(pconfig->scaling, "strong", 16) == 0);
   assert(pconfig->rank > 1 && pconfig->rank < 5);
+
+  assert(strncmp(pconfig->libver_bound_low, "earliest", 16) == 0 ||
+         strncmp(pconfig->libver_bound_low, "v18", 16) == 0 ||
+         strncmp(pconfig->libver_bound_low, "v110", 16) == 0 ||
+         strncmp(pconfig->libver_bound_low, "v112", 16) == 0 ||
+         strncmp(pconfig->libver_bound_low, "v114", 16) == 0 ||
+         strncmp(pconfig->libver_bound_low, "latest", 16) == 0);
+
+  assert(strncmp(pconfig->libver_bound_high, "v18", 16) == 0 ||
+         strncmp(pconfig->libver_bound_high, "v110", 16) == 0 ||
+         strncmp(pconfig->libver_bound_high, "v112", 16) == 0 ||
+         strncmp(pconfig->libver_bound_high, "v114", 16) == 0 ||
+         strncmp(pconfig->libver_bound_high, "latest", 16) == 0);
+
   assert(strncmp(pconfig->slowest_dimension, "step", 16) == 0 ||
          strncmp(pconfig->slowest_dimension, "array", 16) == 0);
   assert(strncmp(pconfig->layout, "contiguous", 16) == 0 ||

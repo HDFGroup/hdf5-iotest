@@ -34,6 +34,8 @@ typedef struct
   char          scaling[16];
   unsigned int  rank;
   char          slowest_dimension[16];
+  char          libver_bound_low[16];
+  char          libver_bound_high[16];
   hsize_t       alignment_increment;
   hsize_t       alignment_threshold;
   char          layout[16];
