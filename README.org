@@ -80,8 +80,8 @@ You need a working installation of parallel HDF5 (which depends on MPI).
 
 #+begin_src sh
 ./autogen.sh
-CC=h5cc ./configure --prefix=<installation directory>
-HDF5_CC=mpicc make
+CC=h5pcc ./configure --prefix=<installation directory>
+make
 make install
 #+end_src
 
