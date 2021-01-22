@@ -605,6 +605,8 @@ herr_t set_libver_bounds(configuration* pconfig, hid_t fapl)
 #else
         low = H5F_LIBVER_LATEST;
 #endif
+      else
+        low = H5F_LIBVER_LATEST;
     }
 
   if (strncmp(pconfig->libver_bound_high, "latest", 16) != 0)
