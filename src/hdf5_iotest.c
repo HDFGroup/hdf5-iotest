@@ -587,51 +587,45 @@ herr_t set_libver_bounds(configuration* pconfig, hid_t fapl)
 
   if (strncmp(pconfig->libver_bound_low, "earliest", 16) != 0)
     {
-#if H5_VERSION_LE(1,8,99)    /* HDF5 1.8.x */
-      low = H5F_LIBVER_LATEST;
-#elif H5_VERSION_LE(1,10,99) /* HDF5 1.10.x */
       if (strncmp(pconfig->libver_bound_low, "v18", 16) == 0)
+#if H5_VERSION_GE(1,10,0)
         low = H5F_LIBVER_V18;
-      else
+#else
         low = H5F_LIBVER_LATEST;
-#elif H5_VERSION_LE(1,12,99) /* HDF5 1.12.x */
-      if (strncmp(pconfig->libver_bound_low, "v18", 16) == 0)
-        low = H5F_LIBVER_V18;
+#endif
       else if (strncmp(pconfig->libver_bound_low, "v110", 16) == 0)
+#if H5_VERSION_GE(1,12,0)
         low = H5F_LIBVER_V110;
-      else
+#else
         low = H5F_LIBVER_LATEST;
-#elif H5_VERSION_LE(1,14,99) /* develop */
-      if (strncmp(pconfig->libver_bound_low, "v18", 16) == 0)
-        low = H5F_LIBVER_V18;
-      else if (strncmp(pconfig->libver_bound_low, "v110", 16) == 0)
-        low = H5F_LIBVER_V110;
+#endif
       else if (strncmp(pconfig->libver_bound_low, "v112", 16) == 0)
+#if H5_VERSION_GE(1,13,0)
         low = H5F_LIBVER_V112;
-      else
+#else
         low = H5F_LIBVER_LATEST;
 #endif
     }
 
   if (strncmp(pconfig->libver_bound_high, "latest", 16) != 0)
     {
-#if H5_VERSION_LE(1,8,99)     /* HDF5 1.8.x */
-      high = H5F_LIBVER_LATEST;
-#elif H5_VERSION_LE(1,10,99)  /* HDF5 1.10.x */
       if (strncmp(pconfig->libver_bound_high, "v18", 16) == 0)
+#if H5_VERSION_GE(1,10,0)
         high = H5F_LIBVER_V18;
-#elif H5_VERSION_LE(1,12,99)  /* HDF5 1.12.x */
-      if (strncmp(pconfig->libver_bound_high, "v18", 16) == 0)
-        high = H5F_LIBVER_V18;
+#else
+        high = H5F_LIBVER_LATEST;
+#endif
       else if (strncmp(pconfig->libver_bound_high, "v110", 16) == 0)
+#if H5_VERSION_GE(1,12,0)
         high = H5F_LIBVER_V110;
-#elif H5_VERSION_LE(1,14,99)  /* develop */
-      if (strncmp(pconfig->libver_bound_high, "v18", 16) == 0)
-        high = H5F_LIBVER_V18;
-      else if (strncmp(pconfig->libver_bound_high, "v110", 16) == 0)
-        high = H5F_LIBVER_V110;
+#else
+        high = H5F_LIBVER_LATEST;
+#endif
       else if (strncmp(pconfig->libver_bound_high, "v112", 16) == 0)
+#if H5_VERSION_GE(1,13,0)
         high = H5F_LIBVER_V112;
+#else
+        high = H5F_LIBVER_LATEST;
 #endif
     }
 
