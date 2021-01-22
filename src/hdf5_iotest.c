@@ -81,7 +81,8 @@ int main(int argc, char* argv[])
       sanity_check(&config);
       validate(&config, size);
       strong_scaling_flg = (strncmp(config.scaling, "strong", 16) == 0);
-      printf("Config loaded from '%s':\n\tsteps=%d, arrays=%d, rows=%ld, columns=%ld, scaling=%s\n",
+      printf("Config loaded from '%s':\n\tsteps=%d, arrays=%d,"
+             "rows=%ld, columns=%ld, scaling=%s\n",
              ini, config.steps, config.arrays, config.rows, config.cols,
              (strong_scaling_flg ? "strong" : "weak"));
       printf("\tproc-grid=%dx%d, slowest-dimension=%s, rank=%d\n",
@@ -542,9 +543,19 @@ int main(int argc, char* argv[])
       /* write results CSV file */
       FILE *fptr = fopen(config.csv_file, "w");
       assert(fptr != NULL);
-      fprintf(fptr, "steps,arrays,rows,cols,scaling,proc-rows,proc-cols,slowdim,rank,alignment-increment,alignment-threshold,layout,fill,mpi-io,wall [s],fsize [B],write-phase-min [s],write-phase-max [s],creat-min [s],creat-max [s],write-min [s],write-max [s],write-rate-min [MiB/s],write-rate-max [MiB/s],read-phase-min [s],read-phase-max [s],read-min [s],read-max [s],read-rate-min [MiB/s],read-rate-max [MiB/s]\n");
-      fprintf(fptr,
-      "%d,%d,%ld,%ld,%s,%d,%d,%s,%d,%ld,%ld,%s,%s,%s,%.2f,%.0f,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f\n",
+      fprintf(fptr, "steps,arrays,rows,cols,scaling,proc-rows,proc-cols,"
+                    "slowdim,rank,alignment-increment,alignment-threshold,"
+                    "layout,fill,mpi-io,wall [s],fsize [B],"
+                    "write-phase-min [s],write-phase-max [s],"
+                    "creat-min [s],creat-max [s],"
+                    "write-min [s],write-max [s],"
+                    "write-rate-min [MiB/s],write-rate-max [MiB/s],"
+                    "read-phase-min [s],read-phase-max [s],"
+                    "read-min [s],read-max [s],"
+                    "read-rate-min [MiB/s],read-rate-max [MiB/s]\n");
+      fprintf(fptr, "%d,%d,%ld,%ld,%s,%d,%d,%s,%d,%ld,%ld,%s,%s,%s,"
+                    "%.2f,%.0f,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,"
+                    "%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f\n",
               config.steps, config.arrays, config.rows, config.cols,
               config.scaling, config.proc_rows, config.proc_cols,
               config.slowest_dimension, config.rank,
@@ -569,87 +580,66 @@ int main(int argc, char* argv[])
 herr_t set_libver_bounds(configuration* pconfig, hid_t fapl)
 {
   herr_t result = 0;
-
-  unsigned majnum, minnum, relnum;
-  assert(H5get_libversion(&majnum, &minnum, &relnum) >= 0);
-  printf("HDF5 library version %d.%d.%d\n", majnum, minnum, relnum);
-  assert (majnum == 1 && minnum >= 8 && minnum <= 13);
-
   H5F_libver_t low = H5F_LIBVER_EARLIEST, high = H5F_LIBVER_LATEST;
+  unsigned majnum, minnum, relnum;
+  assert((result = H5get_libversion(&majnum, &minnum, &relnum)) >= 0);
+  assert (majnum == 1 && minnum >= 8 && minnum <= 13);
 
   if (strncmp(pconfig->libver_bound_low, "earliest", 16) != 0)
     {
-      if (minnum < 10) /* HDF5 1.8.x */
+#if H5_VERSION_LE(1,8,99)    /* HDF5 1.8.x */
+      low = H5F_LIBVER_LATEST;
+#elif H5_VERSION_LE(1,10,99) /* HDF5 1.10.x */
+      if (strncmp(pconfig->libver_bound_low, "v18", 16) == 0)
+        low = H5F_LIBVER_V18;
+      else
         low = H5F_LIBVER_LATEST;
-
-#if H5_VERSION_GE(1,10,0)
-      if (minnum < 12) /* HDF5 1.10.x */
-        if (strncmp(pconfig->libver_bound_low, "v18", 16) == 0)
-          low = H5F_LIBVER_V18;
-        else
-          low = H5F_LIBVER_LATEST;
-#endif
-
-#if H5_VERSION_GE(1,12,0)
-      if(minnum < 14)  /* HDF5 1.12.x */
-        {
-          if (strncmp(pconfig->libver_bound_low, "v18", 16) == 0)
-            low = H5F_LIBVER_V18;
-          else if (strncmp(pconfig->libver_bound_low, "v110", 16) == 0)
-            low = H5F_LIBVER_V110;
-          else
-            low = H5F_LIBVER_LATEST;
-        }
-#endif
-
-#if H5_VERSION_GE(1,13,0)
-      if(minnum < 16)  /* HDF5 1.13.x */
-        {
-          if (strncmp(pconfig->libver_bound_low, "v18", 16) == 0)
-            low = H5F_LIBVER_V18;
-          else if (strncmp(pconfig->libver_bound_low, "v110", 16) == 0)
-            low = H5F_LIBVER_V110;
-          else if (strncmp(pconfig->libver_bound_low, "v112", 16) == 0)
-            low = H5F_LIBVER_V112;
-          else
-            low = H5F_LIBVER_LATEST;
-        }
+#elif H5_VERSION_LE(1,12,99) /* HDF5 1.12.x */
+      if (strncmp(pconfig->libver_bound_low, "v18", 16) == 0)
+        low = H5F_LIBVER_V18;
+      else if (strncmp(pconfig->libver_bound_low, "v110", 16) == 0)
+        low = H5F_LIBVER_V110;
+      else
+        low = H5F_LIBVER_LATEST;
+#elif H5_VERSION_LE(1,14,99) /* develop */
+      if (strncmp(pconfig->libver_bound_low, "v18", 16) == 0)
+        low = H5F_LIBVER_V18;
+      else if (strncmp(pconfig->libver_bound_low, "v110", 16) == 0)
+        low = H5F_LIBVER_V110;
+      else if (strncmp(pconfig->libver_bound_low, "v112", 16) == 0)
+        low = H5F_LIBVER_V112;
+      else
+        low = H5F_LIBVER_LATEST;
 #endif
     }
 
   if (strncmp(pconfig->libver_bound_high, "latest", 16) != 0)
     {
-#if H5_VERSION_GE(1,10,0)
-      if (minnum < 12) /* HDF5 1.10.x */
-        if (strncmp(pconfig->libver_bound_high, "v18", 16) == 0)
-          high = H5F_LIBVER_V18;
-#endif
-
-#if H5_VERSION_GE(1,12,0)
-      if(minnum < 14)  /* HDF5 1.12.x */
-        {
-          if (strncmp(pconfig->libver_bound_high, "v18", 16) == 0)
-            high = H5F_LIBVER_V18;
-          else if (strncmp(pconfig->libver_bound_high, "v110", 16) == 0)
-            high = H5F_LIBVER_V110;
-        }
-#endif
-
-#if H5_VERSION_GE(1,13,0)
-      if(minnum < 16)  /* HDF5 1.13.x */
-        {
-          if (strncmp(pconfig->libver_bound_high, "v18", 16) == 0)
-            high = H5F_LIBVER_V18;
-          else if (strncmp(pconfig->libver_bound_high, "v110", 16) == 0)
-            high = H5F_LIBVER_V110;
-          else if (strncmp(pconfig->libver_bound_high, "v112", 16) == 0)
-            high = H5F_LIBVER_V112;
-        }
+#if H5_VERSION_LE(1,8,99)     /* HDF5 1.8.x */
+      high = H5F_LIBVER_LATEST;
+#elif H5_VERSION_LE(1,10,99)  /* HDF5 1.10.x */
+      if (strncmp(pconfig->libver_bound_high, "v18", 16) == 0)
+        high = H5F_LIBVER_V18;
+#elif H5_VERSION_LE(1,12,99)  /* HDF5 1.12.x */
+      if (strncmp(pconfig->libver_bound_high, "v18", 16) == 0)
+        high = H5F_LIBVER_V18;
+      else if (strncmp(pconfig->libver_bound_high, "v110", 16) == 0)
+        high = H5F_LIBVER_V110;
+#elif H5_VERSION_LE(1,14,99)  /* develop */
+      if (strncmp(pconfig->libver_bound_high, "v18", 16) == 0)
+        high = H5F_LIBVER_V18;
+      else if (strncmp(pconfig->libver_bound_high, "v110", 16) == 0)
+        high = H5F_LIBVER_V110;
+      else if (strncmp(pconfig->libver_bound_high, "v112", 16) == 0)
+        high = H5F_LIBVER_V112;
 #endif
     }
 
   assert(low <= high);
-  assert(H5Pset_libver_bounds(fapl, low, high) >= 0);
+  assert((result = H5Pset_libver_bounds(fapl, low, high)) >= 0);
+
+  printf("\nHDF5 library version %d.%d.%d[low=%d,high=%d]\n",
+         majnum, minnum, relnum, low, high);
 
   return result;
 }
