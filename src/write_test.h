@@ -11,13 +11,13 @@
 
 */
 
-#ifndef READ_TEST_H
-#define READ_TEST_H
+#ifndef WRITE_TEST_H
+#define WRITE_TEST_H
 
 #include "configuration.h"
 #include "hdf5.h"
 
-extern void read_test
+extern void write_test
 (
  configuration* pconfig,
  int size,
@@ -28,7 +28,8 @@ extern void read_test
  unsigned long my_cols,
  hid_t fapl,
  hid_t dxpl,
- double* read_time
+ double* create_time,
+ double* write_time
  );
 
 #endif

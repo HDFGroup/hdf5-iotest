@@ -1,3 +1,15 @@
+/* hdf5-iotest -- simple I/O performance tester for HDF5
+
+   SPDX-License-Identifier: BSD-3-Clause
+
+   Copyright (C) 2020, The HDF Group
+
+   hdf5-iotest is released under the New BSD license (see COPYING).
+   Go to the project home page for more info:
+
+   https://github.com/HDFGroup/hdf5-iotest
+
+*/
 
 #include "read_test.h"
 
@@ -18,7 +30,6 @@ void read_test
  unsigned long my_rows,
  unsigned long my_cols,
  hid_t fapl,
- hid_t mspace,
  hid_t dxpl,
  double* read_time
  )
@@ -65,7 +76,7 @@ void read_test
                 create_selection(pconfig, fspace, my_proc_row, my_proc_col,
                                  istep, iarray);
                 *read_time -= MPI_Wtime();
-                assert(H5Dread(dset, H5T_NATIVE_DOUBLE, mspace, fspace, dxpl,
+                assert(H5Dread(dset, H5T_NATIVE_DOUBLE, H5S_ALL, fspace, dxpl,
                                rbuf) >= 0);
                 *read_time += MPI_Wtime();
                 assert(H5Sclose(fspace) >= 0);
@@ -99,7 +110,7 @@ void read_test
                                      my_proc_col, istep, iarray);
 
                     *read_time -= MPI_Wtime();
-                    assert(H5Dread(dset, H5T_NATIVE_DOUBLE, mspace, fspace,
+                    assert(H5Dread(dset, H5T_NATIVE_DOUBLE, H5S_ALL, fspace,
                                    dxpl, rbuf) >= 0);
                     *read_time += MPI_Wtime();
 
@@ -128,7 +139,7 @@ void read_test
                                      my_proc_col, istep, iarray);
 
                     *read_time -= MPI_Wtime();
-                    assert(H5Dread(dset, H5T_NATIVE_DOUBLE, mspace, fspace,
+                    assert(H5Dread(dset, H5T_NATIVE_DOUBLE, H5S_ALL, fspace,
                                    dxpl, rbuf) >= 0);
                     *read_time += MPI_Wtime();
 
@@ -164,7 +175,7 @@ void read_test
                                  istep, iarray);
 
                 *read_time -= MPI_Wtime();
-                assert(H5Dread(dset, H5T_NATIVE_DOUBLE, mspace, fspace, dxpl,
+                assert(H5Dread(dset, H5T_NATIVE_DOUBLE, H5S_ALL, fspace, dxpl,
                                rbuf) >= 0);
                 *read_time += MPI_Wtime();
 
