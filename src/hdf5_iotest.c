@@ -13,6 +13,7 @@
 */
 
 #include "dataset.h"
+#include "read_test.h"
 
 #include "hdf5.h"
 
@@ -23,7 +24,7 @@
 
 #define CONFIG_FILE "hdf5_iotest.ini"
 
-herr_t set_libver_bounds(configuration* config, hid_t fapl);
+herr_t set_libver_bounds(configuration* config, int rank, hid_t fapl);
 
 int main(int argc, char* argv[])
 {
@@ -35,7 +36,7 @@ int main(int argc, char* argv[])
   int size, rank, my_proc_row, my_proc_col;
   unsigned long my_rows, my_cols;
   unsigned int istep, iarray;
-  double *wbuf, *rbuf;
+  double *wbuf;
   size_t i, j;
 
   hid_t mspace, dxpl, fapl, file, dset, fspace;
@@ -106,7 +107,6 @@ int main(int argc, char* argv[])
 
   /* allocate the write and read arrays */
   wbuf = (double*) malloc(my_rows*my_cols*sizeof(double));
-  rbuf = (double*) calloc(my_rows*my_cols, sizeof(double));
 
 #ifdef VERIFY_DATA
   d[2] = strong_scaling_flg ? config.rows : config.rows * config.proc_rows;
@@ -141,7 +141,7 @@ int main(int argc, char* argv[])
   if (config.alignment_increment > 1)
     assert(H5Pset_alignment(fapl, config.alignment_threshold,
                             config.alignment_increment) >= 0);
-  assert(set_libver_bounds(&config, fapl) >= 0);
+  assert(set_libver_bounds(&config, rank, fapl) >= 0);
 
   step_first_flg = (strncmp(config.slowest_dimension, "step", 16) == 0);
 
@@ -322,146 +322,8 @@ int main(int argc, char* argv[])
 
   read_phase = -MPI_Wtime();
 
-  { /* READ phase */
-    assert((file = H5Fopen(config.hdf5_file, H5F_ACC_RDONLY, fapl)) >= 0);
-
-    switch (config.rank)
-      {
-      case 4:
-        {
-          assert((dset = H5Dopen(file, "dataset", H5P_DEFAULT)) >= 0);
-
-          for (istep = 0; istep < config.steps; ++istep)
-            {
-              for (iarray = 0; iarray < config.arrays; ++iarray)
-                {
-                  assert((fspace = H5Dget_space(dset)) >= 0);
-                  create_selection(&config, fspace, my_proc_row, my_proc_col,
-                                   istep, iarray);
-                  read_time -= MPI_Wtime();
-                  assert(H5Dread(dset, H5T_NATIVE_DOUBLE, mspace, fspace, dxpl,
-                                 rbuf) >= 0);
-                  read_time += MPI_Wtime();
-                  assert(H5Sclose(fspace) >= 0);
-
-#ifdef VERIFY_DATA
-                  d[0] = step_first_flg ? config.steps : config.arrays;
-                  d[1] = step_first_flg ? config.arrays : config.steps;
-                  o[0] = step_first_flg ? istep : iarray;
-                  o[1] = step_first_flg ? iarray : istep;
-                  verify_read_buffer(rbuf, &my_rows, &my_cols, d, o);
-#endif
-                }
-            }
-
-          assert(H5Dclose(dset) >= 0);
-        }
-        break;
-      case 3:
-        {
-          if (step_first_flg) /* dataset per step */
-            {
-              for (istep = 0; istep < config.steps; ++istep)
-                {
-                  sprintf(path, "step=%d", istep);
-                  assert((dset = H5Dopen(file, path, H5P_DEFAULT)) >= 0);
-                  assert((fspace = H5Dget_space(dset)) >= 0);
-
-                  for (iarray = 0; iarray < config.arrays; ++iarray)
-                    {
-                      create_selection(&config, fspace, my_proc_row,
-                                       my_proc_col, istep, iarray);
-
-                      read_time -= MPI_Wtime();
-                      assert(H5Dread(dset, H5T_NATIVE_DOUBLE, mspace, fspace,
-                                     dxpl, rbuf) >= 0);
-                      read_time += MPI_Wtime();
-
-#ifdef VERIFY_DATA
-                      d[0] = config.steps; d[1] = config.arrays;
-                      o[0] = istep; o[1] = iarray;
-                      verify_read_buffer(rbuf, &my_rows, &my_cols, d, o);
-#endif
-                    }
-
-                  assert(H5Sclose(fspace) >= 0);
-                  assert(H5Dclose(dset) >= 0);
-
-                }
-            }
-          else /* dataset per array */
-            {
-              for (istep = 0; istep < config.steps; ++istep)
-                {
-                  for (iarray = 0; iarray < config.arrays; ++iarray)
-                    {
-                      sprintf(path, "array=%d", iarray);
-                      assert((dset = H5Dopen(file, path, H5P_DEFAULT)) >= 0);
-                      assert((fspace = H5Dget_space(dset)) >= 0);
-                      create_selection(&config, fspace, my_proc_row,
-                                       my_proc_col, istep, iarray);
-
-                      read_time -= MPI_Wtime();
-                      assert(H5Dread(dset, H5T_NATIVE_DOUBLE, mspace, fspace,
-                                     dxpl, rbuf) >= 0);
-                      read_time += MPI_Wtime();
-
-                      assert(H5Sclose(fspace) >= 0);
-                      assert(H5Dclose(dset) >= 0);
-
-#ifdef VERIFY_DATA
-                      d[0] = config.arrays; d[1] = config.steps;
-                      o[0] = iarray; o[1] = istep;
-                      verify_read_buffer(rbuf, &my_rows, &my_cols, d, o);
-#endif
-                    }
-                }
-            }
-        }
-        break;
-      case 2:
-        {
-          for (istep = 0; istep < config.steps; ++istep)
-            {
-              for (iarray = 0; iarray < config.arrays; ++iarray)
-                {
-                  /* group per step or array */
-                  sprintf(path, (step_first_flg ?
-                                 "step=%d/array=%d" : "array=%d/step=%d"),
-                          (step_first_flg ? istep : iarray),
-                          (step_first_flg ? iarray : istep));
-
-                  assert((dset = H5Dopen(file, path, H5P_DEFAULT)) >= 0);
-
-                  assert((fspace = H5Dget_space(dset)) >= 0);
-                  create_selection(&config, fspace, my_proc_row, my_proc_col,
-                                   istep, iarray);
-
-                  read_time -= MPI_Wtime();
-                  assert(H5Dread(dset, H5T_NATIVE_DOUBLE, mspace, fspace, dxpl,
-                                 rbuf) >= 0);
-                  read_time += MPI_Wtime();
-
-                  assert(H5Sclose(fspace) >= 0);
-                  assert(H5Dclose(dset) >= 0);
-
-#ifdef VERIFY_DATA
-                  d[0] = step_first_flg ? config.steps : config.arrays;
-                  d[1] = step_first_flg ? config.arrays : config.steps;
-                  o[0] = step_first_flg ? istep : iarray;
-                  o[1] = step_first_flg ? iarray : istep;
-                  verify_read_buffer(rbuf, &my_rows, &my_cols, d, o);
-#endif
-                }
-            }
-        }
-        break;
-      default:
-        break;
-      }
-
-    assert(H5Fclose(file) >= 0);
-  }
+  read_test(&config, size, rank, my_proc_row, my_proc_col, my_rows, my_cols,
+            fapl, mspace, dxpl, &read_time);
 
   read_phase += MPI_Wtime();
 
@@ -482,7 +344,6 @@ int main(int argc, char* argv[])
   }
 
   free(wbuf);
-  free(rbuf);
 
   max_write_phase = min_write_phase = 0.0;
   max_create_time = min_create_time = 0.0;
@@ -549,13 +410,11 @@ int main(int argc, char* argv[])
                     "write-phase-min [s],write-phase-max [s],"
                     "creat-min [s],creat-max [s],"
                     "write-min [s],write-max [s],"
-                    "write-rate-min [MiB/s],write-rate-max [MiB/s],"
                     "read-phase-min [s],read-phase-max [s],"
-                    "read-min [s],read-max [s],"
-                    "read-rate-min [MiB/s],read-rate-max [MiB/s]\n");
+                    "read-min [s],read-max [s]\n");
       fprintf(fptr, "%d,%d,%ld,%ld,%s,%d,%d,%s,%d,%ld,%ld,%s,%s,%s,"
-                    "%.2f,%.0f,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,"
-                    "%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f\n",
+                    "%.2f,%.0f,%.2f,%.2f,%.2f,%.2f,"
+                    "%.2f,%.2f,%.2f,%.2f,%.2f,%.2f\n",
               config.steps, config.arrays, config.rows, config.cols,
               config.scaling, config.proc_rows, config.proc_cols,
               config.slowest_dimension, config.rank,
@@ -565,10 +424,8 @@ int main(int argc, char* argv[])
               min_write_phase, max_write_phase,
               min_create_time, max_create_time,
               min_write_time, max_write_time,
-              min_write_rate, max_write_rate,
               min_read_phase, max_read_phase,
-              min_read_time, max_read_time,
-              min_read_rate, max_read_rate);
+              min_read_time, max_read_time);
       fclose(fptr);
     }
 
@@ -577,7 +434,7 @@ int main(int argc, char* argv[])
   return 0;
 }
 
-herr_t set_libver_bounds(configuration* pconfig, hid_t fapl)
+herr_t set_libver_bounds(configuration* pconfig, int rank, hid_t fapl)
 {
   herr_t result = 0;
   H5F_libver_t low = H5F_LIBVER_EARLIEST, high = H5F_LIBVER_LATEST;
@@ -634,8 +491,9 @@ herr_t set_libver_bounds(configuration* pconfig, hid_t fapl)
   assert(low <= high);
   assert((result = H5Pset_libver_bounds(fapl, low, high)) >= 0);
 
-  printf("\nHDF5 library version %d.%d.%d[low=%d,high=%d]\n",
-         majnum, minnum, relnum, low, high);
+  if (rank == 0)
+    printf("\nHDF5 library version %d.%d.%d[low=%d,high=%d]\n",
+           majnum, minnum, relnum, low, high);
 
   return result;
 }
