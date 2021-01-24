@@ -119,16 +119,6 @@ a new section, e.g., =[CUSTOM]=, and overwrite the default values as needed.
 Any parameter specified in the =[CUSTOM]= section overwrites its =[DEFAULT]=
 counterpart.
 
-For a basic set of 24 custom parameter combinations see the [[https://raw.githubusercontent.com/HDFGroup/hdf5-iotest/master/src/combinator.sh][combinator.sh]]
-configuration file generator. Running:
-
-#+begin_src sh
-combinator.sh <prows> <pcols>
-#+end_src
-
-will create 24 configuration files for a =prows x pcols= topology of MPI
-processes.
-
 ** Parameters<<sec:parameters>>
 The following configuration parameters are supported.
 
@@ -193,88 +183,23 @@ The following configuration parameters are supported.
     scaling = weak
     #+end_src
 
-- Dataset Rank :: HDF5 I/O test can combine the 2D array variables into a global
-  4D dataset, multiple 3D datasets, or individual 2D datasets, in the HDF5 file.
-    #+begin_src conf-unix :noweb-ref hdf5-iotest-conf
-    # [2, 3, 4]
-    dataset-rank = 4
-    #+end_src
-
-- Slowest Dimension :: Since multiple array variables are written in multiple
-  steps, and the two counts can be very different, we have to chose an
-  "iteration" order.
-    #+begin_src conf-unix :noweb-ref hdf5-iotest-conf
-    # [step, array]
-    slowest-dimension = step
-    #+end_src
-
-- Lower Library Version Bound :: The HDF5 library uses sets of (file format)
-  micro-versions to control the creation of HDF5 objects. A given library
-  version can be configured to create objects conforming to a set of minimum
-  micro-versions called its /lower/ library version bound. Only certain
-  combinations of lower and upper library version bounds are valid. Please check
-  the documentation of =H5Pset_libversion= for details.
-    #+begin_src conf-unix :noweb-ref hdf5-iotest-conf
-    # [earliest, v18, v110, v112, v114, latest]
-    libver-bound-low = earliest
-    #+end_src
-
-- Upper Library Version Bound :: The HDF5 library uses sets of (file format)
-  micro-versions to control the creation of HDF5 objects. A given library
-  version can be configured to create objects conforming to a set of maximum
-  micro-versions called its /upper/ library version bound. Please check
-  the documentation of =H5Pset_libversion= for details.
-    #+begin_src conf-unix :noweb-ref hdf5-iotest-conf
-    # [v18, v110, v112, v114, latest]
-    libver-bound-high = latest
-    #+end_src
-
 - Alignment Increment :: Align HDF5 objects greater than or equal to an
   alignment threshold on addresses which are a multiple of this increment.
     #+begin_src conf-unix :noweb-ref hdf5-iotest-conf
- alignment-increment = 1
+    # align along increment [bytes] boundaries
+    alignment-increment = 1
     #+end_src
 
-     By default there are no alignment restrictions in effect, and only
+  By default there are no alignment restrictions in effect, and only
   increments greater than 1 have any effect.
 
 - Alignment Threshold :: The minimum object size (in bytes) for which alignment
   constraints will be enforced. A threshold of 0 forces everything to be
   aligned.
     #+begin_src conf-unix :noweb-ref hdf5-iotest-conf
- alignment-threshold = 0
+    # minimum object size [bytes] to force alignment
+    alignment-threshold = 0
     #+end_src
-
-- Dataset Layout :: The storage layout in the HDF5 file can be chunked or
-                    contiguous.
-    #+begin_src conf-unix :noweb-ref hdf5-iotest-conf
-    # [contiguous, chunked]
-    layout = contiguous
-    #+end_src
-
-    In the current implementation, the chunk size is fixed, but will be
-    configurable in a future version.
-
-- Initialization with Fill Values :: The default behavior of the HDF5 library is
-  to initialize storage with the default or a user-specified fill value.  This
-  incurs additional I/O and may reduce performance. Use this flag to enable
-  (=true=) or disable (=false=) storage initialization with fill values.
-    #+begin_src conf-unix :noweb-ref hdf5-iotest-conf
-    # [true, false]
-    fill-values = true
-    #+end_src
-
-    There is a third behavior (=H5D_FILL_TIME_IFSET=), but the point here is to
-     demonstrate the additional cost of initialization with fill values.
-
-- MPI I/O Operations :: With MPI, the write and read operation can be collective
-     or independent.
-    #+begin_src conf-unix :noweb-ref hdf5-iotest-conf
-    # [collective, independent]
-    mpi-io = independent
-    #+end_src
-
-    This setting has no effect for a single MPI process.
 
 - HDF5 Output File Name :: The default HDF5 output file name is
      =hdf5_iotest.h5=. Use this parameter to select a different name.
@@ -338,8 +263,9 @@ steps,arrays,rows,cols,scaling,proc-rows,proc-cols,slowdim,rank,alignment-increm
 
 *** Metrics
 All timings are obtained via =MPI_Wtime=. For some metrics, we record minima and
-maxima across MPI ranks. The columns =steps= through =mpi-io= are just reiterations
-of the configuration parameters. The remaining columns are as follows:
+maxima across MPI ranks. The columns =steps= through =mpi-io= are just
+reiterations of the configuration parameters. The remaining columns are as
+follows:
 
 - =wall [s]= :: Wall time in seconds.
 - =fsize [B]= :: The HDF5 output file size in bytes
@@ -350,12 +276,8 @@ of the configuration parameters. The remaining columns are as follows:
      in seconds
 - =write-min [s],write-max [s]= :: The fastest and slowest cumulative =H5Dwrite=
      time in seconds
-- =write-rate-min [MiB/s],write-rate-max [MiB/s]= :: The lowest and highest
-     =H5Dwrite= throughput in MiB/s
 - =read-phase-min [s],read-phase-max [s]= :: The fastest and slowest cumulative
      read phase time in seconds. This includes the times for opening the HDF5
      file and for creating dataset selections.
 - =read-min [s],read-max [s]= :: The fastest and slowest cumulative =H5Dread= time
      in seconds
-- =read-rate-min [MiB/s],read-rate-max [MiB/s]= :: The lowest and highest =H5Dread=
-     throughput in MiB/s

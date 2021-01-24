@@ -50,8 +50,6 @@ extern int handler(void* user,
                    const char* name,
                    const char* value);
 
-extern int sanity_check(void* user);
-
-extern int validate(void* user, const int size);
+extern int validate(configuration* user, const int size);
 
 #endif

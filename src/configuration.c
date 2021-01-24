@@ -23,7 +23,13 @@
  *
  */
 
-int check_options(configuration* pconfig, const char* section, const char* name, const char* value)
+int check_options
+(
+ configuration* pconfig,
+ const char* section,
+ const char* name,
+ const char* value
+ )
 {
 #define MATCH(s, n) strcmp(section, s) == 0 && strcmp(name, n) == 0
 
@@ -96,10 +102,8 @@ int handler(void* user,
  *
  */
 
-int sanity_check(void* user)
+int validate(configuration* pconfig, const int size)
 {
-  configuration* pconfig = (configuration*)user;
-
   assert(pconfig->version == 0);
   assert(pconfig->steps > 0);
   assert(pconfig->arrays > 0);
@@ -110,41 +114,6 @@ int sanity_check(void* user)
   assert(strncmp(pconfig->scaling, "weak", 16) == 0 ||
          strncmp(pconfig->scaling, "strong", 16) == 0);
   assert(pconfig->rank > 1 && pconfig->rank < 5);
-
-  assert(strncmp(pconfig->libver_bound_low, "earliest", 16) == 0 ||
-         strncmp(pconfig->libver_bound_low, "v18", 16) == 0 ||
-         strncmp(pconfig->libver_bound_low, "v110", 16) == 0 ||
-         strncmp(pconfig->libver_bound_low, "v112", 16) == 0 ||
-         strncmp(pconfig->libver_bound_low, "v114", 16) == 0 ||
-         strncmp(pconfig->libver_bound_low, "latest", 16) == 0);
-
-  assert(strncmp(pconfig->libver_bound_high, "v18", 16) == 0 ||
-         strncmp(pconfig->libver_bound_high, "v110", 16) == 0 ||
-         strncmp(pconfig->libver_bound_high, "v112", 16) == 0 ||
-         strncmp(pconfig->libver_bound_high, "v114", 16) == 0 ||
-         strncmp(pconfig->libver_bound_high, "latest", 16) == 0);
-
-  assert(strncmp(pconfig->slowest_dimension, "step", 16) == 0 ||
-         strncmp(pconfig->slowest_dimension, "array", 16) == 0);
-  assert(strncmp(pconfig->layout, "contiguous", 16) == 0 ||
-         strncmp(pconfig->layout, "chunked", 16) == 0);
-  assert(strncmp(pconfig->fill_values, "true", 8) == 0 ||
-         strncmp(pconfig->fill_values, "false", 8) == 0);
-  assert(strncmp(pconfig->mpi_io, "independent", 16) == 0 ||
-         strncmp(pconfig->mpi_io, "collective", 16) == 0);
-
-  return 0;
-}
-
-/*
- *
- * Validate the configuration
- *
- */
-
-int validate(void* user, const int size)
-{
-  configuration* pconfig = (configuration*)user;
 
   assert(pconfig->proc_rows*pconfig->proc_cols == (unsigned)size);
 

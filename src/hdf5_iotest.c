@@ -52,18 +52,20 @@ int main(int argc, char* argv[])
 
   if (rank == 0) /* rank 0 reads and checks the config. file */
     {
+      /* sensible defaults */
+      config.rank = 4;
+
       if (ini_parse(ini, handler, &config) < 0)
         {
           printf("Can't load '%s'\n", ini);
           return 1;
         }
-
-      sanity_check(&config);
-      validate(&config, size);
     }
 
   /* broadcast the input parameters */
   MPI_Bcast(&config, sizeof(configuration), MPI_BYTE, 0, MPI_COMM_WORLD);
+
+  validate(&config, size);
 
   my_proc_row = rank / config.proc_cols;
   my_proc_col = rank % config.proc_cols;
@@ -84,8 +86,6 @@ int main(int argc, char* argv[])
               "read-min [s],read-max [s]\n");
       fclose(fptr);
     }
-
-  /* TODO: initialize the configuration */
 
   strong_scaling_flg = (strncmp(config.scaling, "strong", 16) == 0);
   my_rows = strong_scaling_flg ? config.rows/config.proc_rows : config.rows;
@@ -131,6 +131,8 @@ int main(int argc, char* argv[])
                 assert(H5Pset_dxpl_mpio(dxpl, H5FD_MPIO_COLLECTIVE) >= 0);
               else
                 assert(H5Pset_dxpl_mpio(dxpl, H5FD_MPIO_INDEPENDENT) >= 0);
+
+              validate(&config, size);
 
               if (rank == 0)
                 print_config(ini, &config);
