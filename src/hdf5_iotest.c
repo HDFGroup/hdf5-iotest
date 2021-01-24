@@ -11,9 +11,9 @@
 
 */
 
-#include "dataset.h"
-#include "write_test.h"
+#include "utils.h"
 #include "read_test.h"
+#include "write_test.h"
 
 #include "hdf5.h"
 
@@ -22,32 +22,6 @@
 #include <string.h>
 
 #define CONFIG_FILE "hdf5_iotest.ini"
-
-typedef struct
-{
-  double min_create_time;
-  double max_create_time;
-  double min_write_phase;
-  double max_write_phase;
-  double min_write_time;
-  double max_write_time;
-  double min_read_phase;
-  double max_read_phase;
-  double min_read_time;
-  double max_read_time;
-} timings;
-
-void print_config(const char* ini, configuration* pconfig);
-
-void print_results
-(
- configuration* pconfig,
- double         wall_time,
- hsize_t        fsize,
- timings*       pts
- );
-
-herr_t set_libver_bounds(configuration* config, int rank, hid_t fapl);
 
 int main(int argc, char* argv[])
 {
@@ -68,7 +42,6 @@ int main(int argc, char* argv[])
   char mpi_mod[2][16]  = { "independent", "collective" };
 
   hid_t dxpl, fapl;
-  hsize_t fsize;
 
   double wall_time, create_time, write_phase, write_time, read_phase, read_time;
   timings ts;
@@ -126,19 +99,24 @@ int main(int argc, char* argv[])
     assert(H5Pset_alignment(fapl, config.alignment_threshold,
                             config.alignment_increment) >= 0);
 
+  /* dataset rank */
   for (irank = 2; irank <= 4; ++irank) {
     config.rank = irank;
 
+    /* slowest changing dimension */
     for (islow = 0; islow <= 1; ++islow) {
       strncpy(config.slowest_dimension, slow_dim[islow],
               sizeof(config.slowest_dimension));
 
+      /* dataset layout */
       for (ilay = 0; ilay <= 1; ++ilay) {
         strncpy(config.layout, layout[ilay], sizeof(config.layout));
 
+        /* write fill values */
         for (ifill = 0; ifill <= 1; ++ifill) {
           strncpy(config.fill_values, fill[ifill], sizeof(config.fill_values));
 
+          /* lower libver bound */
           for (ifmt = 0; ifmt <= 1; ++ifmt) {
             strncpy(config.libver_bound_low, fmt_low[ifmt],
                     sizeof(config.libver_bound_low));
@@ -179,16 +157,6 @@ int main(int argc, char* argv[])
 
               wall_time += MPI_Wtime();
 
-              if (rank == 0) /* retrieve the file size */
-                {
-                  hid_t file;
-                  assert((file =
-                          H5Fopen(config.hdf5_file, H5F_ACC_RDONLY, H5P_DEFAULT))
-                         >= 0);
-                  assert(H5Fget_filesize(file, &fsize) >= 0);
-                  assert(H5Fclose(file) >= 0);
-                }
-
               ts.max_write_phase = ts.min_write_phase = 0.0;
               ts.max_create_time = ts.min_create_time = 0.0;
               ts.max_write_time = ts.min_write_time = 0.0;
@@ -217,7 +185,7 @@ int main(int argc, char* argv[])
                          MPI_MAX, 0, MPI_COMM_WORLD);
 
               if (rank == 0)
-                print_results(&config, wall_time, fsize, &ts);
+                print_results(&config, wall_time, &ts);
             }
           }
         }
@@ -231,131 +199,4 @@ int main(int argc, char* argv[])
   MPI_Finalize();
 
   return 0;
-}
-
-void print_results
-(
- configuration* pconfig,
- double         wall_time,
- hsize_t        fsize,
- timings*       pts
- )
-{
-  FILE *fptr = fopen(pconfig->csv_file, "a");
-
-  /* write results to console */
-  printf("\nWall clock [s]:\t\t%.2f\n", wall_time);
-  printf("File size [B]:\t\t%.0f\n", (double)fsize);
-  printf("---------------------------------------------\n");
-  printf("Measurement:\t\t_MIN (over MPI ranks)\n");
-  printf("\t\t\t^MAX (over MPI ranks)\n");
-  printf("---------------------------------------------\n");
-  printf("Write phase [s]:\t_%.2f\n\t\t\t^%.2f\n", pts->min_write_phase,
-         pts->max_write_phase);
-  printf("Create time [s]:\t_%.2f\n\t\t\t^%.2f\n", pts->min_create_time,
-         pts->max_create_time);
-  printf("Write time [s]:\t\t_%.2f\n\t\t\t^%.2f\n", pts->min_write_time,
-         pts->max_write_time);
-  printf("Read phase [s]:\t\t_%.2f\n\t\t\t^%.2f\n", pts->min_read_phase,
-         pts->max_read_phase);
-  printf("Read time [s]:\t\t_%.2f\n\t\t\t^%.2f\n", pts->min_read_time,
-         pts->max_read_time);
-
-  /* write results to the CSV file */
-  assert(fptr != NULL);
-  fprintf(fptr, "%d,%d,%ld,%ld,%s,%d,%d,%s,%d,%ld,%ld,%s,%s,%s,"
-          "%.2f,%.0f,%.2f,%.2f,%.2f,%.2f,"
-          "%.2f,%.2f,%.2f,%.2f,%.2f,%.2f\n",
-          pconfig->steps, pconfig->arrays, pconfig->rows, pconfig->cols,
-          pconfig->scaling, pconfig->proc_rows, pconfig->proc_cols,
-          pconfig->slowest_dimension, pconfig->rank,
-          pconfig->alignment_increment, pconfig->alignment_threshold,
-          pconfig->layout,
-          pconfig->fill_values, pconfig->mpi_io, wall_time, (double)fsize,
-          pts->min_write_phase, pts->max_write_phase,
-          pts->min_create_time, pts->max_create_time,
-          pts->min_write_time, pts->max_write_time,
-          pts->min_read_phase, pts->max_read_phase,
-          pts->min_read_time, pts->max_read_time);
-  fclose(fptr);
-}
-
-void print_config(const char* ini, configuration* pconfig)
-{
-  printf("Config loaded from '%s':\n\tsteps=%d, arrays=%d,"
-         "rows=%ld, columns=%ld, scaling=%s\n",
-         ini, pconfig->steps, pconfig->arrays, pconfig->rows, pconfig->cols,
-         pconfig->scaling
-         );
-  printf("\tproc-grid=%dx%d, slowest-dimension=%s, rank=%d\n",
-         pconfig->proc_rows, pconfig->proc_cols, pconfig->slowest_dimension,
-         pconfig->rank);
-  printf("\talignment-increment=%ld, alignment-threshold=%ld\n",
-         pconfig->alignment_increment, pconfig->alignment_threshold);
-  printf("\tlayout=%s, fill=%s, mpi-io=%s\n",
-         pconfig->layout, pconfig->fill_values, pconfig->mpi_io);
-}
-
-herr_t set_libver_bounds(configuration* pconfig, int rank, hid_t fapl)
-{
-  herr_t result = 0;
-  H5F_libver_t low = H5F_LIBVER_EARLIEST, high = H5F_LIBVER_LATEST;
-  unsigned majnum, minnum, relnum;
-  assert((result = H5get_libversion(&majnum, &minnum, &relnum)) >= 0);
-  assert (majnum == 1 && minnum >= 8 && minnum <= 13);
-
-  if (strncmp(pconfig->libver_bound_low, "earliest", 16) != 0)
-    {
-      if (strncmp(pconfig->libver_bound_low, "v18", 16) == 0)
-#if H5_VERSION_GE(1,10,0)
-        low = H5F_LIBVER_V18;
-#else
-      low = H5F_LIBVER_LATEST;
-#endif
-      else if (strncmp(pconfig->libver_bound_low, "v110", 16) == 0)
-#if H5_VERSION_GE(1,12,0)
-        low = H5F_LIBVER_V110;
-#else
-      low = H5F_LIBVER_LATEST;
-#endif
-      else if (strncmp(pconfig->libver_bound_low, "v112", 16) == 0)
-#if H5_VERSION_GE(1,13,0)
-        low = H5F_LIBVER_V112;
-#else
-      low = H5F_LIBVER_LATEST;
-#endif
-      else
-        low = H5F_LIBVER_LATEST;
-    }
-
-  if (strncmp(pconfig->libver_bound_high, "latest", 16) != 0)
-    {
-      if (strncmp(pconfig->libver_bound_high, "v18", 16) == 0)
-#if H5_VERSION_GE(1,10,0)
-        high = H5F_LIBVER_V18;
-#else
-      high = H5F_LIBVER_LATEST;
-#endif
-      else if (strncmp(pconfig->libver_bound_high, "v110", 16) == 0)
-#if H5_VERSION_GE(1,12,0)
-        high = H5F_LIBVER_V110;
-#else
-      high = H5F_LIBVER_LATEST;
-#endif
-      else if (strncmp(pconfig->libver_bound_high, "v112", 16) == 0)
-#if H5_VERSION_GE(1,13,0)
-        high = H5F_LIBVER_V112;
-#else
-      high = H5F_LIBVER_LATEST;
-#endif
-    }
-
-  assert(low <= high);
-  assert((result = H5Pset_libver_bounds(fapl, low, high)) >= 0);
-
-  if (rank == 0)
-    printf("\nHDF5 library version %d.%d.%d[low=%d,high=%d]\n",
-           majnum, minnum, relnum, low, high);
-
-  return result;
 }
