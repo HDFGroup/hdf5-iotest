@@ -67,25 +67,15 @@ int main(int argc, char* argv[])
 
   validate(&config, size);
 
+  if (rank == 0)
+    print_initial_config(ini, &config);
+
   my_proc_row = rank / config.proc_cols;
   my_proc_col = rank % config.proc_cols;
 
   /* create the output CSV file */
-
   if (rank == 0)
-    {
-      FILE *fptr = fopen(config.csv_file, "w");
-      assert(fptr != NULL);
-      fprintf(fptr, "steps,arrays,rows,cols,scaling,proc-rows,proc-cols,"
-              "slowdim,rank,alignment-increment,alignment-threshold,"
-              "layout,fill,mpi-io,wall [s],fsize [B],"
-              "write-phase-min [s],write-phase-max [s],"
-              "creat-min [s],creat-max [s],"
-              "write-min [s],write-max [s],"
-              "read-phase-min [s],read-phase-max [s],"
-              "read-min [s],read-max [s]\n");
-      fclose(fptr);
-    }
+    create_output_file(config.csv_file);
 
   strong_scaling_flg = (strncmp(config.scaling, "strong", 16) == 0);
   my_rows = strong_scaling_flg ? config.rows/config.proc_rows : config.rows;
@@ -135,7 +125,7 @@ int main(int argc, char* argv[])
               validate(&config, size);
 
               if (rank == 0)
-                print_config(ini, &config);
+                print_current_config(&config);
 
               MPI_Barrier(MPI_COMM_WORLD);
 

@@ -32,7 +32,11 @@ typedef struct
   double max_read_time;
 } timings;
 
-void print_config(const char* ini, configuration* pconfig);
+void create_output_file(const char* fname);
+
+void print_initial_config(const char* ini, configuration* pconfig);
+
+void print_current_config(configuration* pconfig);
 
 void print_results
 (
