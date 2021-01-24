@@ -197,7 +197,7 @@ The following configuration parameters are supported.
   constraints will be enforced. A threshold of 0 forces everything to be
   aligned.
     #+begin_src conf-unix :noweb-ref hdf5-iotest-conf
-    # minimum object size [bytes] to force alignment
+    # minimum object size [bytes] to force alignment (0=all objects)
     alignment-threshold = 0
     #+end_src
 
