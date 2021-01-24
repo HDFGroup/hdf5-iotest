@@ -38,6 +38,7 @@ void write_test
   unsigned int step_first_flg;
   unsigned int istep, iarray;
   double *wbuf;
+  hid_t mspace;
   size_t i, j;
 
   char path[255];
@@ -60,6 +61,13 @@ void write_test
   step_first_flg = (strncmp(pconfig->slowest_dimension, "step", 16) == 0);
 
   wbuf = (double*) malloc(my_rows*my_cols*sizeof(double));
+  { /* create the in-memory dataspace */
+    hsize_t dims[2];
+    dims[0] = (hsize_t)my_rows;
+    dims[1] = (hsize_t)my_cols;
+    mspace = H5Screate_simple(2, dims, dims);
+    assert(H5Sselect_all(mspace) >= 0);
+  }
 
 #ifdef VERIFY_DATA
   d[2] = strong_scaling_flg ? config.rows : config.rows * config.proc_rows;
@@ -104,10 +112,9 @@ void write_test
                                  istep, iarray);
 
                 *write_time -= MPI_Wtime();
-                assert(H5Dwrite(dset, H5T_NATIVE_DOUBLE, H5S_ALL, fspace,
+                assert(H5Dwrite(dset, H5T_NATIVE_DOUBLE, mspace, fspace,
                                 dxpl, wbuf) >= 0);
                 *write_time += MPI_Wtime();
-
                 assert(H5Sclose(fspace) >= 0);
               }
           }
@@ -138,10 +145,9 @@ void write_test
                                      my_proc_col, istep, iarray);
 
                     *write_time -= MPI_Wtime();
-                    assert(H5Dwrite(dset, H5T_NATIVE_DOUBLE, H5S_ALL, fspace,
+                    assert(H5Dwrite(dset, H5T_NATIVE_DOUBLE, mspace, fspace,
                                     dxpl, wbuf) >= 0);
                     *write_time += MPI_Wtime();
-
                     assert(H5Sclose(fspace) >= 0);
                   }
 
@@ -179,11 +185,10 @@ void write_test
                                      my_proc_col, istep, iarray);
 
                     *write_time -= MPI_Wtime();
-                    assert(H5Dwrite(dset, H5T_NATIVE_DOUBLE, H5S_ALL, fspace,
+                    assert(H5Dwrite(dset, H5T_NATIVE_DOUBLE, mspace, fspace,
                                     dxpl, wbuf) >= 0);
                     *write_time += MPI_Wtime();
                     assert(H5Sclose(fspace) >= 0);
-
                     assert(H5Dclose(dset) >= 0);
                   }
               }
@@ -222,7 +227,7 @@ void write_test
                                  istep, iarray);
 
                 *write_time -= MPI_Wtime();
-                assert(H5Dwrite(dset, H5T_NATIVE_DOUBLE, H5S_ALL, fspace,
+                assert(H5Dwrite(dset, H5T_NATIVE_DOUBLE, mspace, fspace,
                                 dxpl, wbuf) >= 0);
                 *write_time += MPI_Wtime();
                 assert(H5Sclose(fspace) >= 0);
@@ -238,6 +243,6 @@ void write_test
     }
 
   assert(H5Fclose(file) >= 0);
-
+  assert(H5Sclose(mspace) >= 0);
   free(wbuf);
 }
