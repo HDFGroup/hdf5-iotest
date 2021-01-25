@@ -38,6 +38,16 @@ void print_initial_config(const char* ini, configuration* pconfig);
 
 void print_current_config(configuration* pconfig);
 
+void get_timings
+(
+ double   write_phase,
+ double   create_time,
+ double   write_time,
+ double   read_phase,
+ double   read_time,
+ timings* pts
+ );
+
 void print_results
 (
  configuration* pconfig,

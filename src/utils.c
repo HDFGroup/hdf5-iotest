@@ -97,6 +97,43 @@ void print_current_config(configuration* pconfig)
          strncmp(pconfig->mpi_io, "collective", 16) == 0 ? "col" : "ind");
 }
 
+void get_timings
+(
+ double   write_phase,
+ double   create_time,
+ double   write_time,
+ double   read_phase,
+ double   read_time,
+ timings* pts
+ )
+{
+  pts->max_write_phase = pts->min_write_phase = 0.0;
+  pts->max_create_time = pts->min_create_time = 0.0;
+  pts->max_write_time = pts->min_write_time = 0.0;
+  pts->max_read_phase = pts->min_read_phase = 0.0;
+  pts->max_read_time = pts->min_read_time = 0.0;
+
+  MPI_Reduce(&write_phase, &pts->min_write_phase, 1, MPI_DOUBLE,
+             MPI_MIN, 0, MPI_COMM_WORLD);
+  MPI_Reduce(&write_phase, &pts->max_write_phase, 1, MPI_DOUBLE,
+             MPI_MAX, 0, MPI_COMM_WORLD);
+  MPI_Reduce(&create_time, &pts->min_create_time, 1, MPI_DOUBLE,
+             MPI_MIN, 0, MPI_COMM_WORLD);
+  MPI_Reduce(&create_time, &pts->max_create_time, 1, MPI_DOUBLE,
+             MPI_MAX, 0, MPI_COMM_WORLD);
+  MPI_Reduce(&write_time, &pts->min_write_time, 1, MPI_DOUBLE,
+             MPI_MIN, 0, MPI_COMM_WORLD);
+  MPI_Reduce(&write_time, &pts->max_write_time, 1, MPI_DOUBLE,
+             MPI_MAX, 0, MPI_COMM_WORLD);
+  MPI_Reduce(&read_phase, &pts->min_read_phase, 1, MPI_DOUBLE,
+             MPI_MIN, 0, MPI_COMM_WORLD);
+  MPI_Reduce(&read_phase, &pts->max_read_phase, 1, MPI_DOUBLE,
+             MPI_MAX, 0, MPI_COMM_WORLD);
+  MPI_Reduce(&read_time, &pts->min_read_time, 1, MPI_DOUBLE,
+             MPI_MIN, 0, MPI_COMM_WORLD);
+  MPI_Reduce(&read_time, &pts->max_read_time, 1, MPI_DOUBLE,
+             MPI_MAX, 0, MPI_COMM_WORLD);
+}
 
 herr_t set_libver_bounds(configuration* pconfig, int rank, hid_t fapl)
 {

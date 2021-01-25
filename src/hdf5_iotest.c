@@ -21,6 +21,9 @@
 #include <stdio.h>
 #include <string.h>
 
+#define  TEST_FOR(INI, CHK, CNT) for ((INI); (CHK); (CNT)) {
+#define  END_TEST }
+
 #define CONFIG_FILE "hdf5_iotest.ini"
 
 int main(int argc, char* argv[])
@@ -89,101 +92,89 @@ int main(int argc, char* argv[])
     assert(H5Pset_alignment(fapl, config.alignment_threshold,
                             config.alignment_increment) >= 0);
 
+  /* use a macro to stop the indentation madness */
+
+  /* ======================================================================== */
   /* dataset rank */
-  for (irank = 2; irank <= 4; ++irank) {
-    config.rank = irank;
+  TEST_FOR (irank = 2, irank <= 4, ++irank);
+  config.rank = irank;
 
-    /* slowest changing dimension */
-    for (islow = 0; islow <= 1; ++islow) {
-      strncpy(config.slowest_dimension, slow_dim[islow],
-              sizeof(config.slowest_dimension));
+  /* ======================================================================== */
+  /* slowest changing dimension */
+  TEST_FOR (islow = 0, islow <= 1, ++islow);
+  strncpy(config.slowest_dimension, slow_dim[islow],
+          sizeof(config.slowest_dimension));
 
-      /* dataset layout */
-      for (ilay = 0; ilay <= 1; ++ilay) {
-        strncpy(config.layout, layout[ilay], sizeof(config.layout));
+  /* ======================================================================== */
+  /* dataset layout */
+  TEST_FOR (ilay = 0, ilay <= 1, ++ilay);
+  strncpy(config.layout, layout[ilay], sizeof(config.layout));
 
-        /* write fill values */
-        for (ifill = 0; ifill <= 1; ++ifill) {
-          strncpy(config.fill_values, fill[ifill], sizeof(config.fill_values));
+  /* ======================================================================== */
+  /* write fill values */
+  TEST_FOR (ifill = 0, ifill <= 1, ++ifill);
+  strncpy(config.fill_values, fill[ifill], sizeof(config.fill_values));
 
-          /* lower libver bound */
-          for (ifmt = 0; ifmt <= 1; ++ifmt) {
-            strncpy(config.libver_bound_low, fmt_low[ifmt],
-                    sizeof(config.libver_bound_low));
+  /* ======================================================================== */
+  /* lower libver bound */
+  TEST_FOR (ifmt = 0, ifmt <= 1, ++ifmt);
+  strncpy(config.libver_bound_low, fmt_low[ifmt],
+          sizeof(config.libver_bound_low));
+  assert(set_libver_bounds(&config, rank, fapl) >= 0);
 
-            assert(set_libver_bounds(&config, rank, fapl) >= 0);
+  /* ======================================================================== */
+  /* MPI-IO mode */
+  TEST_FOR (imod = 0, imod <= 1, ++imod);
+  strncpy(config.mpi_io, mpi_mod[imod], sizeof(config.mpi_io));
 
-            for (imod = 0; imod <= 1; ++imod) {
-              strncpy(config.mpi_io, mpi_mod[imod], sizeof(config.mpi_io));
+  coll_mpi_io_flg = (strncmp(config.mpi_io, "collective", 16) == 0);
+  if (coll_mpi_io_flg)
+    assert(H5Pset_dxpl_mpio(dxpl, H5FD_MPIO_COLLECTIVE) >= 0);
+  else
+    assert(H5Pset_dxpl_mpio(dxpl, H5FD_MPIO_INDEPENDENT) >= 0);
 
-              coll_mpi_io_flg = (strncmp(config.mpi_io, "collective", 16) == 0);
-              if (coll_mpi_io_flg)
-                assert(H5Pset_dxpl_mpio(dxpl, H5FD_MPIO_COLLECTIVE) >= 0);
-              else
-                assert(H5Pset_dxpl_mpio(dxpl, H5FD_MPIO_INDEPENDENT) >= 0);
+  /* ######################################################################## */
 
-              validate(&config, size);
+  validate(&config, size);
 
-              if (rank == 0)
-                print_current_config(&config);
+  if (rank == 0)
+    print_current_config(&config);
 
-              MPI_Barrier(MPI_COMM_WORLD);
+  MPI_Barrier(MPI_COMM_WORLD);
 
-              wall_time = -MPI_Wtime();
-              read_time = write_time = create_time = 0.0;
+  wall_time = -MPI_Wtime();
+  read_time = write_time = create_time = 0.0;
 
-              write_phase = -MPI_Wtime();
-              write_test(&config, size, rank, my_proc_row, my_proc_col,
-                         my_rows, my_cols, fapl, dxpl,
-                         &create_time, &write_time);
-              write_phase += MPI_Wtime();
+  write_phase = -MPI_Wtime();
+  write_test(&config, size, rank, my_proc_row, my_proc_col,
+             my_rows, my_cols, fapl, dxpl,
+             &create_time, &write_time);
+  write_phase += MPI_Wtime();
 
-              MPI_Barrier(MPI_COMM_WORLD);
+  MPI_Barrier(MPI_COMM_WORLD);
 
-              read_phase = -MPI_Wtime();
-              read_test(&config, size, rank, my_proc_row, my_proc_col,
-                        my_rows, my_cols, fapl, dxpl, &read_time);
-              read_phase += MPI_Wtime();
+  read_phase = -MPI_Wtime();
+  read_test(&config, size, rank, my_proc_row, my_proc_col,
+            my_rows, my_cols, fapl, dxpl, &read_time);
+  read_phase += MPI_Wtime();
 
-              MPI_Barrier(MPI_COMM_WORLD);
+  MPI_Barrier(MPI_COMM_WORLD);
 
-              wall_time += MPI_Wtime();
+  wall_time += MPI_Wtime();
 
-              ts.max_write_phase = ts.min_write_phase = 0.0;
-              ts.max_create_time = ts.min_create_time = 0.0;
-              ts.max_write_time = ts.min_write_time = 0.0;
-              ts.max_read_phase = ts.min_read_phase = 0.0;
-              ts.max_read_time = ts.min_read_time = 0.0;
+  get_timings(write_phase, create_time, write_time, read_phase, read_time, &ts);
 
-              MPI_Reduce(&write_phase, &ts.min_write_phase, 1, MPI_DOUBLE,
-                         MPI_MIN, 0, MPI_COMM_WORLD);
-              MPI_Reduce(&write_phase, &ts.max_write_phase, 1, MPI_DOUBLE,
-                         MPI_MAX, 0, MPI_COMM_WORLD);
-              MPI_Reduce(&create_time, &ts.min_create_time, 1, MPI_DOUBLE,
-                         MPI_MIN, 0, MPI_COMM_WORLD);
-              MPI_Reduce(&create_time, &ts.max_create_time, 1, MPI_DOUBLE,
-                         MPI_MAX, 0, MPI_COMM_WORLD);
-              MPI_Reduce(&write_time, &ts.min_write_time, 1, MPI_DOUBLE,
-                         MPI_MIN, 0, MPI_COMM_WORLD);
-              MPI_Reduce(&write_time, &ts.max_write_time, 1, MPI_DOUBLE,
-                         MPI_MAX, 0, MPI_COMM_WORLD);
-              MPI_Reduce(&read_phase, &ts.min_read_phase, 1, MPI_DOUBLE,
-                         MPI_MIN, 0, MPI_COMM_WORLD);
-              MPI_Reduce(&read_phase, &ts.max_read_phase, 1, MPI_DOUBLE,
-                         MPI_MAX, 0, MPI_COMM_WORLD);
-              MPI_Reduce(&read_time, &ts.min_read_time, 1, MPI_DOUBLE,
-                         MPI_MIN, 0, MPI_COMM_WORLD);
-              MPI_Reduce(&read_time, &ts.max_read_time, 1, MPI_DOUBLE,
-                         MPI_MAX, 0, MPI_COMM_WORLD);
+  if (rank == 0)
+    print_results(&config, wall_time, &ts);
 
-              if (rank == 0)
-                print_results(&config, wall_time, &ts);
-            }
-          }
-        }
-      }
-    }
-  }
+  /* ######################################################################## */
+
+  END_TEST /* MPI-IO mode */
+  END_TEST /* libver bound */
+  END_TEST /* fill */
+  END_TEST /* layout */
+  END_TEST /* slow dim. */
+  END_TEST /* rank */
 
   assert(H5Pclose(fapl) >= 0);
   assert(H5Pclose(dxpl) >= 0);
