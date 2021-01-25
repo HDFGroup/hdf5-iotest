@@ -25,7 +25,7 @@ void create_output_file(const char* fname)
   assert(fptr != NULL);
   fprintf(fptr, "steps,arrays,rows,cols,scaling,proc-rows,proc-cols,"
           "slowdim,rank,version,alignment-increment,alignment-threshold,"
-          "layout,fill,mpi-io,wall [s],fsize [B],"
+          "layout,fill,fmt,mpi-io,wall [s],fsize [B],"
           "write-phase-min [s],write-phase-max [s],"
           "creat-min [s],creat-max [s],"
           "write-min [s],write-max [s],"
@@ -66,8 +66,8 @@ void print_results
             pconfig->scaling, pconfig->proc_rows, pconfig->proc_cols,
             pconfig->slowest_dimension, pconfig->rank, version,
             pconfig->alignment_increment, pconfig->alignment_threshold,
-            pconfig->layout,
-            pconfig->fill_values, pconfig->mpi_io, wall_time, (double)fsize,
+            pconfig->layout, pconfig->fill_values, pconfig->libver_bound_low,
+            pconfig->mpi_io, wall_time, (double)fsize,
             pts->min_write_phase, pts->max_write_phase,
             pts->min_create_time, pts->max_create_time,
             pts->min_write_time, pts->max_write_time,
@@ -89,11 +89,12 @@ void print_initial_config(const char* ini, configuration* pconfig)
 void print_current_config(configuration* pconfig)
 {
   printf(HLINE "\n");
-  printf("%s rk=%d %s fill=%s align-[incr:thold]=[%ld:%ld] mpi-io=%s\n",
+  printf("%s rk=%d %s fill=%s align-[incr:thold]=[%ld:%ld] fmt=%s mpi-io=%s\n",
          pconfig->slowest_dimension, pconfig->rank,
          strncmp(pconfig->layout, "contiguous", 16) == 0 ? "cont" : "chkd",
          pconfig->fill_values,
          pconfig->alignment_increment, pconfig->alignment_threshold,
+         pconfig->libver_bound_low,
          strncmp(pconfig->mpi_io, "collective", 16) == 0 ? "col" : "ind");
 }
 
