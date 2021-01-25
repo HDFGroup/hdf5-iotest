@@ -122,5 +122,7 @@ int validate(configuration* pconfig, const int size)
     assert(pconfig->cols%pconfig->proc_cols == 0);
   }
 
+  assert(pconfig->alignment_increment >= 1);
+
   return 0;
 }

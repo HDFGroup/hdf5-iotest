@@ -36,13 +36,15 @@ int main(int argc, char* argv[])
   int size, rank, my_proc_row, my_proc_col;
   unsigned long my_rows, my_cols;
 
-  unsigned int irank, islow, ifill, ilay, ifmt, imod;
+  unsigned int irank, islow, ifill, ilay, ialig, ifmt, imod;
 
-  char slow_dim[2][16] = { "step", "array" };
-  char fill[2][16]     = { "true", "false" };
-  char layout[2][16]   = { "contiguous", "chunked" };
-  char fmt_low[2][16]  = { "earliest", "latest" };
-  char mpi_mod[2][16]  = { "independent", "collective" };
+  char slow_dim[2][16]   = { "step", "array" };
+  char fill[2][16]       = { "true", "false" };
+  char layout[2][16]     = { "contiguous", "chunked" };
+  hsize_t align_incr[2]  = { 1, 1 };
+  hsize_t align_thold[2] = { 0, 0 };
+  char fmt_low[2][16]    = { "earliest", "latest" };
+  char mpi_mod[2][16]    = { "independent", "collective" };
 
   hid_t dxpl, fapl;
 
@@ -116,6 +118,27 @@ int main(int argc, char* argv[])
   strncpy(config.fill_values, fill[ifill], sizeof(config.fill_values));
 
   /* ======================================================================== */
+  /* alignment */
+  TEST_FOR (ialig = 0, ialig <= 1, ++ialig);
+  if (ialig == 0) /* run the baseline first */
+    {
+      align_incr[1]  = config.alignment_increment;
+      align_thold[1] = config.alignment_threshold;
+      config.alignment_increment = align_incr[0];
+      config.alignment_threshold = align_thold[0];
+    }
+  else
+    { /* check if we need to run anything beyond the baseline */
+      if (align_incr[1] == 1 && align_thold[1] == 0)
+        continue;
+      else
+        {
+          config.alignment_increment = align_incr[1];
+          config.alignment_threshold = align_thold[1];
+        }
+    }
+
+  /* ======================================================================== */
   /* lower libver bound */
   TEST_FOR (ifmt = 0, ifmt <= 1, ++ifmt);
   strncpy(config.libver_bound_low, fmt_low[ifmt],
@@ -171,6 +194,7 @@ int main(int argc, char* argv[])
 
   END_TEST /* MPI-IO mode */
   END_TEST /* libver bound */
+  END_TEST /* alignment */
   END_TEST /* fill */
   END_TEST /* layout */
   END_TEST /* slow dim. */
