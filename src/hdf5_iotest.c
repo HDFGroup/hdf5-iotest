@@ -150,11 +150,17 @@ int main(int argc, char* argv[])
   TEST_FOR (imod = 0, imod <= 1, ++imod);
   strncpy(config.mpi_io, mpi_mod[imod], sizeof(config.mpi_io));
 
-  coll_mpi_io_flg = (strncmp(config.mpi_io, "collective", 16) == 0);
-  if (coll_mpi_io_flg)
-    assert(H5Pset_dxpl_mpio(dxpl, H5FD_MPIO_COLLECTIVE) >= 0);
+  if (size > 1)
+    {
+      coll_mpi_io_flg = (strncmp(config.mpi_io, "collective", 16) == 0);
+      if (coll_mpi_io_flg)
+        assert(H5Pset_dxpl_mpio(dxpl, H5FD_MPIO_COLLECTIVE) >= 0);
+      else
+        assert(H5Pset_dxpl_mpio(dxpl, H5FD_MPIO_INDEPENDENT) >= 0);
+    }
   else
-    assert(H5Pset_dxpl_mpio(dxpl, H5FD_MPIO_INDEPENDENT) >= 0);
+    if (imod == 1)
+      continue;
 
   /* ######################################################################## */
 
