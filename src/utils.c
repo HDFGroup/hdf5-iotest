@@ -100,10 +100,10 @@ void print_current_config(configuration* pconfig)
         strncpy(io, "posix", 16);
       else if (strncmp(pconfig->single_process, "core", 16) == 0)
         strncpy(io, "core", 16);
-      else if (strncmp(pconfig->single_process, "mpi-io", 16) == 0)
+      else if (strncmp(pconfig->single_process, "mpi-io-uni", 16) == 0)
         strncpy(io, "mpi-io-uni", 16);
       else
-        strncpy(io, "unknown-io", 16);
+        strncpy(io, "ufo-io", 16);
     }
 
   printf(HLINE "\n");
