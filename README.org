@@ -7,12 +7,23 @@
 
 * Description
 
-This is a simple I/O performance tester for HDF5. It's purpose is to assess the
-/performance variability/ of a set of logically equivalent HDF5 representations of
-a common pattern. The test repeatedly writes a set of 2D array variables over a
-set of "time steps." A configuration file (see below) controls how the array
-variables are represented in HDF5 and certain other low-level aspects of HDF5
-library behavior. (See also [[https://github.com/ornladios/ADIOS2/tree/master/source/utils/adios_iotest][ADIOS IOTEST]].)
+This is a simple I/O performance tester for HDF5.  (See also [[https://github.com/ornladios/ADIOS2/tree/master/source/utils/adios_iotest][ADIOS IOTEST]].) It's
+purpose is to assess the /performance variability/ of a set of logically
+equivalent HDF5 representations of a common pattern. The test repeatedly writes
+a set of 2D array variables over a set of "time steps." A configuration file
+(see below) is used to control parameters such as the number of steps, the count
+and shape of the 2D array variables, etc. (See section [[sec:parameters]].) The test
+then uses between 48 and 192 different combinations of up to 7 internal
+parameter (see section [[sec:internal-parameters]]) to configure the HDF5 library
+and output, perform write and read operations, and report certain timings. (The
+number of combinations is different for sequential and parallel runs, and
+depends on other choices.)
+
+For a /baseline/, this test can (and should!) be run with a single MPI process
+using the POSIX, core, and MPI-IO VFDs. Typically, each baseline variant covers
+a different aspect of the underlying system, its configuration, and the
+particular HDF5 library version. Doing MPI-parallel runs without this baseline
+is the proverbial "getting off on the wrong foot."
 
 * Installation
 
@@ -227,6 +238,29 @@ The following configuration parameters are supported.
  csv-file = hdf5_iotest.csv
     #+end_src
 
+* Internal Parameters<<sec:internal-parameters>>
+
+Currently, the I/O test varies the following parameters:
+
+- Dataset Rank :: The 2D array variables can be stored individually, or embedded
+  into 3D or 4D datasets. In other words, the rank can be 2, 3, or 4.
+- Slowest Dimension :: The slowest dimension can be array (count) or time.
+- Initialization with Fill Values :: The default behavior of the HDF5 library is
+  to initialize storage with the default or a user-specified fill value. This
+  incurs additional I/O and may reduce performance.
+- Storage Layout :: The dataset storage layout in the HDF5 file can be chunked
+  or contiguous (or compact or virtual or user-defined).
+- Alignment :: HDF5 objects greater than or equal to an alignment threshold can
+  be aligned on addresses which are a multiple of a certain increment.
+- Lower Library Version Bound  :: The HDF5 library can be configured to use the
+  earliest or latest available file format micro-versions when generating
+  objects.
+- MPI I/O Operations :: With MPI, the write and read operation can be collective
+  or independent.
+
+Since there is no shortage of knobs in the HDF5 API, other parameters might be
+added in the future.
+
 * Appendix <<sec:appendix>>
 ** Sample =spack spec hdf5iotest= output <<sec:spack-spec-out>>
 #+begin_example
@@ -269,8 +303,10 @@ The CSV output looks like this. It's then easy to concatenate several of these
 (after stripping out the header), and load them into [[https://pandas.pydata.org/][pandas]] or [[https://www.r-project.org/][R]].
 
 #+begin_example
-steps,arrays,rows,cols,scaling,proc-rows,proc-cols,slowdim,rank,alignment-increment,alignment-threshold,layout,fill,mpi-io,wall [s],fsize [B],write-phase-min [s],write-phase-max [s],creat-min [s],creat-max [s],write-min [s],write-max [s],write-rate-min [MiB/s],write-rate-max [MiB/s],read-phase-min [s],read-phase-max [s],read-min [s],read-max [s],read-rate-min [MiB/s],read-rate-max [MiB/s]
-20,500,100,200,weak,1,1,step,4,8,1024,contiguous,false,independent,3.20,1600002048,2.44,2.44,0.38,0.38,1.92,1.92,794.18,794.18,0.76,0.76,0.73,0.73,2089.42,2089.42
+steps,arrays,rows,cols,scaling,proc-rows,proc-cols,slowdim,rank,version,alignment-increment,alignment-threshold,layout,fill,fmt,io,wall [s],fsize [B],write-phase-min [s],write-phase-max [s],creat-min [s],creat-max [s],write-min [s],write-max [s],read-phase-min [s],read-phase-max [s],read-min [s],read-max [s]
+20,500,100,200,weak,1,1,step,2,"1.8.22",1,0,contiguous,true,earliest,core,15.37,1689710848,14.10,14.10,7.25,7.25,0.77,0.77,1.27,1.27,0.27,0.27
+20,500,100,200,weak,1,1,step,2,"1.8.22",1,0,contiguous,true,latest,core,20.70,1682116757,19.53,19.53,12.08,12.08,0.78,0.78,1.17,1.17,0.28,0.28
+...
 #+end_example
 
 *** Metrics
@@ -281,15 +317,15 @@ follows:
 
 - =wall [s]= :: Wall time in seconds.
 - =fsize [B]= :: The HDF5 output file size in bytes
-- =write-phase-min [s],write-phase-max [s]= :: The fastest and slowest cumulative
-     write phase time in seconds. This includes the time for the dataset
-     creation(s).
-- =creat-min [s],creat-max [s]= :: The fastest and slowest time spend in =H5Fcreate=
-     in seconds
+- =write-phase-min [s],write-phase-max [s]= :: The fastest and slowest
+  cumulative write phase time in seconds. This includes the time for file and
+  dataset creation(s).
+- =creat-min [s],creat-max [s]= :: The fastest and slowest time spent in
+  =H5Fcreate= and =H5Dcreate= in seconds
 - =write-min [s],write-max [s]= :: The fastest and slowest cumulative =H5Dwrite=
-     time in seconds
+  time in seconds
 - =read-phase-min [s],read-phase-max [s]= :: The fastest and slowest cumulative
-     read phase time in seconds. This includes the times for opening the HDF5
-     file and for creating dataset selections.
-- =read-min [s],read-max [s]= :: The fastest and slowest cumulative =H5Dread= time
-     in seconds
+  read phase time in seconds. This includes the times for opening the HDF5 file
+  and for creating dataset selections.
+- =read-min [s],read-max [s]= :: The fastest and slowest cumulative =H5Dread=
+  time in seconds
