@@ -163,8 +163,11 @@ int main(int argc, char* argv[])
         assert(H5Pset_dxpl_mpio(dxpl, H5FD_MPIO_INDEPENDENT) >= 0);
     }
   else
-    if (imod == 1)
-      continue;
+    {
+      strncpy(config.mpi_io, config.single_process, sizeof(config.mpi_io));
+      if (imod == 1)
+        continue;
+    }
 
   /* ######################################################################## */
 

@@ -25,7 +25,7 @@ void create_output_file(const char* fname)
   assert(fptr != NULL);
   fprintf(fptr, "steps,arrays,rows,cols,scaling,proc-rows,proc-cols,"
           "slowdim,rank,version,alignment-increment,alignment-threshold,"
-          "layout,fill,fmt,mpi-io,wall [s],fsize [B],"
+          "layout,fill,fmt,io,wall [s],fsize [B],"
           "write-phase-min [s],write-phase-max [s],"
           "creat-min [s],creat-max [s],"
           "write-min [s],write-max [s],"
