@@ -255,7 +255,7 @@ Currently, the I/O test varies the following parameters:
 - Lower Library Version Bound  :: The HDF5 library can be configured to use the
   earliest or latest available file format micro-versions when generating
   objects.
-- MPI I/O Operations :: With MPI, the write and read operation can be collective
+- MPI I/O Operations :: With MPI, the write and read operations can be collective
   or independent.
 
 Since there is no shortage of knobs in the HDF5 API, other parameters might be
