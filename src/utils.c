@@ -88,14 +88,31 @@ void print_initial_config(const char* ini, configuration* pconfig)
 
 void print_current_config(configuration* pconfig)
 {
+  unsigned int size = pconfig->proc_rows*pconfig->proc_cols;
+  char io[16];
+
+  if (size > 1)
+      strncpy(io, (strncmp(pconfig->mpi_io, "collective", 16) == 0) ?
+              "mpi-io-col" : "mpi-io-ind", 16);
+  else
+    {
+      if (strncmp(pconfig->single_process, "posix", 16) == 0)
+        strncpy(io, "posix", 16);
+      else if (strncmp(pconfig->single_process, "core", 16) == 0)
+        strncpy(io, "core", 16);
+      else if (strncmp(pconfig->single_process, "mpi-io", 16) == 0)
+        strncpy(io, "mpi-io-uni", 16);
+      else
+        strncpy(io, "unknown-io", 16);
+    }
+
   printf(HLINE "\n");
-  printf("%s rk=%d %s fill=%s align-[incr:thold]=[%ld:%ld] fmt=%s mpi-io=%s\n",
+  printf("%s rk=%d %s fill=%s align-[incr:thold]=[%ld:%ld] fmt=%s io=%s\n",
          pconfig->slowest_dimension, pconfig->rank,
          strncmp(pconfig->layout, "contiguous", 16) == 0 ? "cont" : "chkd",
          pconfig->fill_values,
          pconfig->alignment_increment, pconfig->alignment_threshold,
-         pconfig->libver_bound_low,
-         strncmp(pconfig->mpi_io, "collective", 16) == 0 ? "col" : "ind");
+         pconfig->libver_bound_low, io);
 }
 
 void get_timings

@@ -40,6 +40,7 @@ typedef struct
   hsize_t       alignment_threshold;
   char          layout[16];
   char          fill_values[8];
+  char          single_process[16];
   char          mpi_io[16];
   char          hdf5_file[PATH_MAX];
   char          csv_file[PATH_MAX];

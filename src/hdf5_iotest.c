@@ -87,9 +87,14 @@ int main(int argc, char* argv[])
   my_cols = strong_scaling_flg ? config.cols/config.proc_cols : config.cols;
 
   assert((dxpl = H5Pcreate(H5P_DATASET_XFER)) >= 0);
-
   assert((fapl = H5Pcreate(H5P_FILE_ACCESS)) >= 0);
-  assert(H5Pset_fapl_mpio(fapl, MPI_COMM_WORLD, MPI_INFO_NULL) >= 0);
+
+  if (size > 1 || (strncmp(config.single_process, "mpi-io", 16) == 0))
+    assert(H5Pset_fapl_mpio(fapl, MPI_COMM_WORLD, MPI_INFO_NULL) >= 0);
+  else
+    if (strncmp(config.single_process, "core", 16) == 0)
+      H5Pset_fapl_core(fapl, 4194304, 1); /* 4 MB increments */
+
   if (config.alignment_increment > 1)
     assert(H5Pset_alignment(fapl, config.alignment_threshold,
                             config.alignment_increment) >= 0);
@@ -148,10 +153,9 @@ int main(int argc, char* argv[])
   /* ======================================================================== */
   /* MPI-IO mode */
   TEST_FOR (imod = 0, imod <= 1, ++imod);
-  strncpy(config.mpi_io, mpi_mod[imod], sizeof(config.mpi_io));
-
   if (size > 1)
     {
+      strncpy(config.mpi_io, mpi_mod[imod], sizeof(config.mpi_io));
       coll_mpi_io_flg = (strncmp(config.mpi_io, "collective", 16) == 0);
       if (coll_mpi_io_flg)
         assert(H5Pset_dxpl_mpio(dxpl, H5FD_MPIO_COLLECTIVE) >= 0);

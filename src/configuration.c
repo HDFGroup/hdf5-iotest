@@ -63,6 +63,8 @@ int check_options
     strncpy(pconfig->layout, value, 16);
   } else if (MATCH(section, "fill-values")) {
     strncpy(pconfig->fill_values, value, 8);
+  } else if (MATCH(section, "single-process")) {
+    strncpy(pconfig->single_process, value, 16);
   } else if (MATCH(section, "mpi-io")) {
     strncpy(pconfig->mpi_io, value, 16);
   } else if (MATCH(section, "hdf5-file")) {
@@ -123,6 +125,10 @@ int validate(configuration* pconfig, const int size)
   }
 
   assert(pconfig->alignment_increment >= 1);
+
+  assert(strncmp(pconfig->single_process, "posix", 16) == 0 ||
+         strncmp(pconfig->single_process, "core", 16) == 0  ||
+         strncmp(pconfig->single_process, "mpi-io", 16) == 0);
 
   return 0;
 }
