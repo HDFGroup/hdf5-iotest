@@ -93,7 +93,7 @@ int main(int argc, char* argv[])
     assert(H5Pset_fapl_mpio(fapl, MPI_COMM_WORLD, MPI_INFO_NULL) >= 0);
   else
     if (strncmp(config.single_process, "core", 16) == 0)
-      H5Pset_fapl_core(fapl, 4194304, 1); /* 4 MB increments */
+      H5Pset_fapl_core(fapl, 67108864, 1); /* 4 MB increments */
 
   if (config.alignment_increment > 1)
     assert(H5Pset_alignment(fapl, config.alignment_threshold,

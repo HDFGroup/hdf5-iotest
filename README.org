@@ -201,6 +201,18 @@ The following configuration parameters are supported.
     alignment-threshold = 0
     #+end_src
 
+- Single Process I/O :: The I/O driver or mode to be used when running with a
+  single process.
+    #+begin_src conf-unix :noweb-ref hdf5-iotest-conf
+    # [posix, core, mpi-io-uni]
+    single-process = posix
+    #+end_src
+
+    This setting is important when establishing a single-process
+  /baseline/. =posix= uses the default POSIX VFD. =core= uses a memory-backed
+  HDF5 file where the underlying memory buffer grows in 64 MB
+  increments. =mpi-io-uni= uses the MPI-IO VFD (with a single process).
+
 - HDF5 Output File Name :: The default HDF5 output file name is
      =hdf5_iotest.h5=. Use this parameter to select a different name.
     #+begin_src conf-unix :noweb-ref hdf5-iotest-conf
