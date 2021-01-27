@@ -241,8 +241,9 @@ void write_test
     default:
       break;
     }
-
+  *create_time -= MPI_Wtime();
   assert(H5Fclose(file) >= 0);
+  *create_time += MPI_Wtime();
   assert(H5Sclose(mspace) >= 0);
   free(wbuf);
 }
