@@ -205,7 +205,9 @@ void read_test
       break;
     }
 
+  *read_time -= MPI_Wtime();
   assert(H5Fclose(file) >= 0);
+  *read_time += MPI_Wtime();
   assert(H5Sclose(mspace) >= 0);
   free(rbuf);
 }

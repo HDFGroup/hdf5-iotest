@@ -10,14 +10,43 @@
 This is a simple I/O performance tester for HDF5.  (See also [[https://github.com/ornladios/ADIOS2/tree/master/source/utils/adios_iotest][ADIOS IOTEST]].) It's
 purpose is to assess the /performance variability/ of a set of logically
 equivalent HDF5 representations of a common pattern. The test repeatedly writes
-a set of 2D array variables over a set of "time steps." A configuration file
-(see below) is used to control parameters such as the number of steps, the count
-and shape of the 2D array variables, etc. (See section [[sec:parameters]].) The test
-then uses between 48 and 192 different combinations of up to 7 internal
-parameter (see section [[sec:internal-parameters]]) to configure the HDF5 library
-and output, perform write and read operations, and report certain timings. (The
-number of combinations is different for sequential and parallel runs, and
-depends on other choices.)
+a set of 2D array variables over a set of "time steps."
+
+#+begin_src plantuml :hidden :file ./img/flow.png :exports results
+
+start
+
+: read config;
+repeat
+  :init step;
+  repeat
+    :init data;
+    fork
+      :write 2D chunk 1;
+    fork again
+      :...;
+    fork again
+      :write 2D chunk P;
+    end fork
+  repeat while (last array?) is (no)
+  ->yes;
+repeat while (last step?) is (no)
+->yes;
+
+stop
+
+#+end_src
+
+#+RESULTS:
+[[file:./img/flow.png]]
+
+A configuration file (see below) is used to control parameters such as the
+number of steps, the count and shape of the 2D array variables, etc. (See
+section [[sec:parameters]].) The test then uses between 48 and 192 different
+combinations of up to 7 internal parameter (see section [[sec:internal-parameters]])
+to configure the HDF5 library and output, perform write and read operations, and
+report certain timings. (The number of combinations is different for sequential
+and parallel runs, and depends on other choices.)
 
 For a /baseline/, this test can (and should!) be run with a single MPI process
 using the POSIX, core, and MPI-IO VFDs. Typically, each baseline variant covers
@@ -321,11 +350,11 @@ follows:
   cumulative write phase time in seconds. This includes the time for file and
   dataset creation(s).
 - =creat-min [s],creat-max [s]= :: The fastest and slowest time spent in
-  =H5Fcreate= and =H5Dcreate= in seconds
+  =H5Fcreate=, =H5Fclose=, and =H5Dcreate= in seconds
 - =write-min [s],write-max [s]= :: The fastest and slowest cumulative =H5Dwrite=
   time in seconds
 - =read-phase-min [s],read-phase-max [s]= :: The fastest and slowest cumulative
-  read phase time in seconds. This includes the times for opening the HDF5 file
-  and for creating dataset selections.
+  read phase time in seconds. This includes the times for opening and closing
+  the HDF5 file and for creating dataset selections.
 - =read-min [s],read-max [s]= :: The fastest and slowest cumulative =H5Dread=
   time in seconds
