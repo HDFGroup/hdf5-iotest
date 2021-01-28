@@ -16,21 +16,31 @@ a set of 2D array variables over a set of "time steps."
 
 start
 
-: read config;
+:read config;
 repeat
-  :init step;
+  :set <i>internal</i> params.;
+  :create HDF5 file;
   repeat
-    :init data;
-    fork
-      :write 2D chunk 1;
-    fork again
-      :...;
-    fork again
-      :write 2D chunk P;
-    end fork
-  repeat while (last array?) is (no)
+    :create groups/datasets;
+    repeat
+      :create datasets;
+      fork
+        :write 2D tile 1;
+      fork again
+        :...;
+      fork again
+        :write 2D tile P;
+      end fork
+    repeat while (last 2D array?) is (no)
+    ->yes;
+  repeat while (last time step?) is (no)
   ->yes;
-repeat while (last step?) is (no)
+  :close file;
+  :...
+  read back the data
+  **details not shown**;
+  :report timings;
+repeat while (last combination?) is (no)
 ->yes;
 
 stop
@@ -44,9 +54,9 @@ A configuration file (see below) is used to control parameters such as the
 number of steps, the count and shape of the 2D array variables, etc. (See
 section [[sec:parameters]].) The test then uses between 48 and 192 different
 combinations of up to 7 internal parameter (see section [[sec:internal-parameters]])
-to configure the HDF5 library and output, perform write and read operations, and
-report certain timings. (The number of combinations is different for sequential
-and parallel runs, and depends on other choices.)
+to configure the HDF5 library and output, to perform write and read operations,
+and to report certain timings. (The number of combinations is different for
+sequential and parallel runs, and depends on other choices.)
 
 For a /baseline/, this test can (and should!) be run with a single MPI process
 using the POSIX, core, and MPI-IO VFDs. Typically, each baseline variant covers
