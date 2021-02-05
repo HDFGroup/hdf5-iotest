@@ -31,6 +31,7 @@ void read_test
  unsigned long my_cols,
  hid_t fapl,
  hid_t dxpl,
+ double* create_time,
  double* read_time
  )
 {
@@ -69,7 +70,7 @@ void read_test
   }
 
   assert((file = H5Fopen(pconfig->hdf5_file, H5F_ACC_RDONLY, fapl)) >= 0);
-
+  
   switch (pconfig->rank)
     {
     case 4:
@@ -81,8 +82,10 @@ void read_test
             for (iarray = 0; iarray < pconfig->arrays; ++iarray)
               {
                 assert((fspace = H5Dget_space(dset)) >= 0);
+		*create_time -= MPI_Wtime();
                 create_selection(pconfig, fspace, my_proc_row, my_proc_col,
                                  istep, iarray);
+		*create_time += MPI_Wtime();
                 *read_time -= MPI_Wtime();
                 assert(H5Dread(dset, H5T_NATIVE_DOUBLE, mspace, fspace, dxpl,
                                rbuf) >= 0);
@@ -114,8 +117,10 @@ void read_test
 
                 for (iarray = 0; iarray < pconfig->arrays; ++iarray)
                   {
+		    *create_time -= MPI_Wtime();
                     create_selection(pconfig, fspace, my_proc_row,
                                      my_proc_col, istep, iarray);
+		    *create_time += MPI_Wtime();
 
                     *read_time -= MPI_Wtime();
                     assert(H5Dread(dset, H5T_NATIVE_DOUBLE, mspace, fspace,
@@ -143,8 +148,10 @@ void read_test
                     sprintf(path, "array=%d", iarray);
                     assert((dset = H5Dopen(file, path, H5P_DEFAULT)) >= 0);
                     assert((fspace = H5Dget_space(dset)) >= 0);
+		    *create_time -= MPI_Wtime();
                     create_selection(pconfig, fspace, my_proc_row,
                                      my_proc_col, istep, iarray);
+		    *create_time += MPI_Wtime();
 
                     *read_time -= MPI_Wtime();
                     assert(H5Dread(dset, H5T_NATIVE_DOUBLE, mspace, fspace,
@@ -179,9 +186,11 @@ void read_test
                 assert((dset = H5Dopen(file, path, H5P_DEFAULT)) >= 0);
 
                 assert((fspace = H5Dget_space(dset)) >= 0);
+		*create_time -= MPI_Wtime();
                 create_selection(pconfig, fspace, my_proc_row, my_proc_col,
                                  istep, iarray);
-
+		*create_time += MPI_Wtime();
+		    
                 *read_time -= MPI_Wtime();
                 assert(H5Dread(dset, H5T_NATIVE_DOUBLE, mspace, fspace, dxpl,
                                rbuf) >= 0);
@@ -205,9 +214,7 @@ void read_test
       break;
     }
 
-  *read_time -= MPI_Wtime();
   assert(H5Fclose(file) >= 0);
-  *read_time += MPI_Wtime();
   assert(H5Sclose(mspace) >= 0);
   free(rbuf);
 }

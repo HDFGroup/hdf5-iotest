@@ -59,6 +59,8 @@ int check_options
     pconfig->alignment_increment = (hsize_t) atol(value);
   } else if (MATCH(section, "alignment-threshold")) {
     pconfig->alignment_threshold = (hsize_t) atol(value);
+  } else if (MATCH(section, "meta-block-size")) {
+    pconfig->meta_block_size = (hsize_t) atol(value);
   } else if (MATCH(section, "layout")) {
     strncpy(pconfig->layout, value, 16);
   } else if (MATCH(section, "fill-values")) {
