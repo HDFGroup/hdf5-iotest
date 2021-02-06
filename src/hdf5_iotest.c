@@ -38,14 +38,14 @@ int main(int argc, char* argv[])
 
   unsigned int irank, islow, ifill, ilay, ialig, imblk, ifmt, imod;
 
-  char slow_dim[2][16]   = { "step", "array" };
-  char fill[2][16]       = { "true", "false" };
-  char layout[2][16]     = { "contiguous", "chunked" };
+  char* slow_dim[2]      = { "step", "array" };
+  char* fill[2]          = { "true", "false" };
+  char* layout[2]        = { "contiguous", "chunked" };
   hsize_t align_incr[2]  = { 1, 1 };
   hsize_t align_thold[2] = { 0, 0 };
   hsize_t mblk_size[2]   = { 2048, 0 };
-  char fmt_low[2][16]    = { "earliest", "latest" };
-  char mpi_mod[2][16]    = { "independent", "collective" };
+  char* fmt_low[2]       = { "earliest", "latest" };
+  char* mpi_mod[2]       = { "independent", "collective" };
 
   hid_t dxpl, fapl;
 
@@ -177,8 +177,8 @@ int main(int argc, char* argv[])
   TEST_FOR (imod = 0, imod <= 1, ++imod);
   if (size > 1)
     {
-      strncpy(config.mpi_io, mpi_mod[imod], sizeof(config.mpi_io));
-      coll_mpi_io_flg = (strncmp(config.mpi_io, "collective", 16) == 0);
+      strncpy(config.mpi_io, mpi_mod[imod], sizeof(config.mpi_io)-1);
+      coll_mpi_io_flg = (strncmp(config.mpi_io, "collective", 15) == 0);
       if (coll_mpi_io_flg)
         assert(H5Pset_dxpl_mpio(dxpl, H5FD_MPIO_COLLECTIVE) >= 0);
       else

@@ -39,7 +39,6 @@ void read_test
   unsigned int istep, iarray;
   double *rbuf;
   hid_t mspace;
-  size_t i, j;
 
   char path[255];
 

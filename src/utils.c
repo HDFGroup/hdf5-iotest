@@ -59,7 +59,7 @@ void print_results
   { /* write results to the CSV file */
     FILE *fptr = fopen(pconfig->csv_file, "a");
     assert(fptr != NULL);
-    fprintf(fptr, "%d,%d,%ld,%ld,%s,%d,%d,%s,%d,%s,%ld,%ld,%ld,%s,%s,%s,%s,"
+    fprintf(fptr, "%d,%d,%ld,%ld,%s,%d,%d,%s,%d,%s,%llu,%llu,%llu,%s,%s,%s,%s,"
             "%.2f,%.0f,%.2f,%.2f,%.2f,%.2f,"
             "%.2f,%.2f,%.2f,%.2f,%.2f,%.2f\n",
             pconfig->steps, pconfig->arrays, pconfig->rows, pconfig->cols,
@@ -108,7 +108,7 @@ void print_current_config(configuration* pconfig)
     }
 
   printf(HLINE "\n");
-  printf("%s rk=%d %s fill=%s align-[incr:thold]=[%lu:%lu] mblk=%lu fmt=%s io=%s\n",
+  printf("%s rk=%d %s fill=%s align-[incr:thold]=[%llu:%llu] mblk=%llu fmt=%s io=%s\n",
          pconfig->slowest_dimension, pconfig->rank,
          strncmp(pconfig->layout, "contiguous", 16) == 0 ? "cont" : "chkd",
          pconfig->fill_values,
