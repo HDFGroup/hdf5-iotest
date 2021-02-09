@@ -25,7 +25,7 @@ void create_output_file(const char* fname)
   assert(fptr != NULL);
   fprintf(fptr, "steps,arrays,rows,cols,scaling,proc-rows,proc-cols,"
           "slowdim,rank,version,alignment-increment,alignment-threshold,"
-          "layout,fill,fmt,io,wall [s],fsize [B],"
+          "meta-block-size,layout,fill,fmt,io,wall [s],fsize [B],"
           "write-phase-min [s],write-phase-max [s],"
           "creat-min [s],creat-max [s],"
           "write-min [s],write-max [s],"
@@ -59,13 +59,14 @@ void print_results
   { /* write results to the CSV file */
     FILE *fptr = fopen(pconfig->csv_file, "a");
     assert(fptr != NULL);
-    fprintf(fptr, "%d,%d,%ld,%ld,%s,%d,%d,%s,%d,%s,%ld,%ld,%s,%s,%s,%s,"
+    fprintf(fptr, "%d,%d,%ld,%ld,%s,%d,%d,%s,%d,%s,%llu,%llu,%llu,%s,%s,%s,%s,"
             "%.2f,%.0f,%.2f,%.2f,%.2f,%.2f,"
             "%.2f,%.2f,%.2f,%.2f,%.2f,%.2f\n",
             pconfig->steps, pconfig->arrays, pconfig->rows, pconfig->cols,
             pconfig->scaling, pconfig->proc_rows, pconfig->proc_cols,
             pconfig->slowest_dimension, pconfig->rank, version,
             pconfig->alignment_increment, pconfig->alignment_threshold,
+	    pconfig->meta_block_size,
             pconfig->layout, pconfig->fill_values, pconfig->libver_bound_low,
             pconfig->mpi_io, wall_time, (double)fsize,
             pts->min_write_phase, pts->max_write_phase,
@@ -107,11 +108,12 @@ void print_current_config(configuration* pconfig)
     }
 
   printf(HLINE "\n");
-  printf("%s rk=%d %s fill=%s align-[incr:thold]=[%ld:%ld] fmt=%s io=%s\n",
+  printf("%s rk=%d %s fill=%s align-[incr:thold]=[%llu:%llu] mblk=%llu fmt=%s io=%s\n",
          pconfig->slowest_dimension, pconfig->rank,
          strncmp(pconfig->layout, "contiguous", 16) == 0 ? "cont" : "chkd",
          pconfig->fill_values,
          pconfig->alignment_increment, pconfig->alignment_threshold,
+	 pconfig->meta_block_size,
          pconfig->libver_bound_low, io);
 }
 

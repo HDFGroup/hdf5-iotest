@@ -252,6 +252,20 @@ The following configuration parameters are supported.
     alignment-threshold = 0
     #+end_src
 
+- Meta Block Size :: The minimum size of metadata block allocations
+  when ~H5FD_FEAT_AGGREGATE_METADATA~ is set by a VFL driver.
+    #+begin_src conf-unix :noweb-ref hdf5-iotest-conf
+    # minimum metadata block allocation size in [bytes]
+    meta-block-size = 2048
+    #+end_src
+
+  Setting the value to 0 with this function will turn off metadata
+  aggregation, even if the VFL driver attempts to use the metadata
+  aggregation strategy.
+
+  The POSIX, core, and MPI-IO VFDs all support metadata allocation
+  aggregation.
+
 - Single Process I/O :: The I/O driver or mode to be used when running with a
   single process.
     #+begin_src conf-unix :noweb-ref hdf5-iotest-conf

@@ -28,6 +28,7 @@ extern void read_test
  unsigned long my_cols,
  hid_t fapl,
  hid_t dxpl,
+ double* create_time,
  double* read_time
  );
 

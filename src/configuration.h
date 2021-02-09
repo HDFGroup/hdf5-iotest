@@ -38,12 +38,13 @@ typedef struct
   char          libver_bound_high[16];
   hsize_t       alignment_increment;
   hsize_t       alignment_threshold;
+  hsize_t       meta_block_size;
   char          layout[16];
   char          fill_values[8];
   char          single_process[16];
   char          mpi_io[16];
-  char          hdf5_file[PATH_MAX];
-  char          csv_file[PATH_MAX];
+  char          hdf5_file[PATH_MAX+1];
+  char          csv_file[PATH_MAX+1];
 } configuration;
 
 extern int handler(void* user,
