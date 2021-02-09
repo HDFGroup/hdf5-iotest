@@ -22,7 +22,7 @@ for i in range(len(wr)):
 
 ax.set_xlabel('write (s)')
 ax.set_ylabel('read (s)')
-ax.set_zlabel('creat (s)')
+ax.set_zlabel('create (s)')
 
 # show the reference triangle outline
 ax.plot([1.0, 0.0, 0.0, 1.0], [0.0, 1.0, 0.0, 0.0], zs=[0.0, 0.0, 1.0, 0.0])
