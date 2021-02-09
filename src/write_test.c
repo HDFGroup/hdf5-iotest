@@ -39,7 +39,7 @@ void write_test
   unsigned int istep, iarray;
   double *wbuf;
   hid_t mspace;
-  size_t i, j;
+  size_t i;
 
   char path[255];
 

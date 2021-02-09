@@ -36,15 +36,16 @@ int main(int argc, char* argv[])
   int size, rank, my_proc_row, my_proc_col;
   unsigned long my_rows, my_cols;
 
-  unsigned int irank, islow, ifill, ilay, ialig, ifmt, imod;
+  unsigned int irank, islow, ifill, ilay, ialig, imblk, ifmt, imod;
 
-  char slow_dim[2][16]   = { "step", "array" };
-  char fill[2][16]       = { "true", "false" };
-  char layout[2][16]     = { "contiguous", "chunked" };
+  char* slow_dim[2]      = { "step", "array" };
+  char* fill[2]          = { "true", "false" };
+  char* layout[2]        = { "contiguous", "chunked" };
   hsize_t align_incr[2]  = { 1, 1 };
   hsize_t align_thold[2] = { 0, 0 };
-  char fmt_low[2][16]    = { "earliest", "latest" };
-  char mpi_mod[2][16]    = { "independent", "collective" };
+  hsize_t mblk_size[2]   = { 2048, 0 };
+  char* fmt_low[2]       = { "earliest", "latest" };
+  char* mpi_mod[2]       = { "independent", "collective" };
 
   hid_t dxpl, fapl;
 
@@ -93,14 +94,10 @@ int main(int argc, char* argv[])
     assert(H5Pset_fapl_mpio(fapl, MPI_COMM_WORLD, MPI_INFO_NULL) >= 0);
   else
     if (strncmp(config.single_process, "core", 16) == 0)
-      H5Pset_fapl_core(fapl, 67108864, 1); /* 4 MB increments */
-
-  if (config.alignment_increment > 1)
-    assert(H5Pset_alignment(fapl, config.alignment_threshold,
-                            config.alignment_increment) >= 0);
+      H5Pset_fapl_core(fapl, 67108864, 1); /* 64 MB increments */
 
   /* use a macro to stop the indentation madness */
-
+  
   /* ======================================================================== */
   /* dataset rank */
   TEST_FOR (irank = 2, irank <= 4, ++irank);
@@ -131,6 +128,8 @@ int main(int argc, char* argv[])
       align_thold[1] = config.alignment_threshold;
       config.alignment_increment = align_incr[0];
       config.alignment_threshold = align_thold[0];
+      assert(H5Pset_alignment(fapl, config.alignment_threshold,
+			      config.alignment_increment) >= 0);
     }
   else
     { /* check if we need to run anything beyond the baseline */
@@ -143,6 +142,29 @@ int main(int argc, char* argv[])
         }
     }
 
+  assert(H5Pset_alignment(fapl, config.alignment_threshold,
+			  config.alignment_increment) >= 0);
+
+  /* ======================================================================== */
+  /* meta block size */
+  TEST_FOR (imblk = 0, imblk <= 1, ++imblk);
+  if (imblk == 0) /* run the baseline first */
+    {
+      mblk_size[1]  = config.meta_block_size;
+      config.meta_block_size = mblk_size[0];
+    }
+  else
+    { /* check if we need to run anything beyond the baseline */
+      if (mblk_size[1] == 2048)
+        continue;
+      else
+        {
+          config.meta_block_size = mblk_size[1];
+        }
+    }
+
+  assert(H5Pset_meta_block_size(fapl, config.meta_block_size) >= 0);
+  
   /* ======================================================================== */
   /* lower libver bound */
   TEST_FOR (ifmt = 0, ifmt <= 1, ++ifmt);
@@ -155,8 +177,8 @@ int main(int argc, char* argv[])
   TEST_FOR (imod = 0, imod <= 1, ++imod);
   if (size > 1)
     {
-      strncpy(config.mpi_io, mpi_mod[imod], sizeof(config.mpi_io));
-      coll_mpi_io_flg = (strncmp(config.mpi_io, "collective", 16) == 0);
+      strncpy(config.mpi_io, mpi_mod[imod], sizeof(config.mpi_io)-1);
+      coll_mpi_io_flg = (strncmp(config.mpi_io, "collective", 15) == 0);
       if (coll_mpi_io_flg)
         assert(H5Pset_dxpl_mpio(dxpl, H5FD_MPIO_COLLECTIVE) >= 0);
       else
@@ -191,7 +213,7 @@ int main(int argc, char* argv[])
 
   read_phase = -MPI_Wtime();
   read_test(&config, size, rank, my_proc_row, my_proc_col,
-            my_rows, my_cols, fapl, dxpl, &read_time);
+            my_rows, my_cols, fapl, dxpl, &create_time, &read_time);
   read_phase += MPI_Wtime();
 
   MPI_Barrier(MPI_COMM_WORLD);
@@ -208,6 +230,7 @@ int main(int argc, char* argv[])
   END_TEST /* MPI-IO mode */
   END_TEST /* libver bound */
   END_TEST /* alignment */
+  END_TEST /* meta block size */    
   END_TEST /* fill */
   END_TEST /* layout */
   END_TEST /* slow dim. */

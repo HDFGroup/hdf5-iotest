@@ -46,34 +46,38 @@ int check_options
   } else if (MATCH(section, "process-columns")) {
     pconfig->proc_cols = (unsigned int) atoi(value);
   } else if (MATCH(section, "scaling")) {
-    strncpy(pconfig->scaling, value, 16);
+    strncpy(pconfig->scaling, value, 15);
   } else if (MATCH(section, "dataset-rank")) {
     pconfig->rank = (unsigned int) atoi(value);
   } else if (MATCH(section, "slowest-dimension")) {
-    strncpy(pconfig->slowest_dimension, value, 16);
+    strncpy(pconfig->slowest_dimension, value, 15);
   } else if (MATCH(section, "libver-bound-low")) {
-    strncpy(pconfig->libver_bound_low, value, 16);
+    strncpy(pconfig->libver_bound_low, value, 15);
   } else if (MATCH(section, "libver-bound-high")) {
-    strncpy(pconfig->libver_bound_high, value, 16);
+    strncpy(pconfig->libver_bound_high, value, 15);
   } else if (MATCH(section, "alignment-increment")) {
     pconfig->alignment_increment = (hsize_t) atol(value);
   } else if (MATCH(section, "alignment-threshold")) {
     pconfig->alignment_threshold = (hsize_t) atol(value);
+  } else if (MATCH(section, "meta-block-size")) {
+    pconfig->meta_block_size = (hsize_t) atol(value);
   } else if (MATCH(section, "layout")) {
-    strncpy(pconfig->layout, value, 16);
+    strncpy(pconfig->layout, value, 15);
   } else if (MATCH(section, "fill-values")) {
-    strncpy(pconfig->fill_values, value, 8);
+    strncpy(pconfig->fill_values, value, 7);
   } else if (MATCH(section, "single-process")) {
-    strncpy(pconfig->single_process, value, 16);
+    strncpy(pconfig->single_process, value, 15);
   } else if (MATCH(section, "mpi-io")) {
-    strncpy(pconfig->mpi_io, value, 16);
+    strncpy(pconfig->mpi_io, value, 15);
   } else if (MATCH(section, "hdf5-file")) {
-    strncpy(pconfig->hdf5_file, value, PATH_MAX);
+    strncpy(pconfig->hdf5_file, value, PATH_MAX-1);
   } else if (MATCH(section, "csv-file")) {
-    strncpy(pconfig->csv_file, value, PATH_MAX);
+    strncpy(pconfig->csv_file, value, PATH_MAX-1);
   } else {
     return 0;  /* unknown name, error */
   }
+
+  return 1; 
 }
 
 int handler(void* user,
