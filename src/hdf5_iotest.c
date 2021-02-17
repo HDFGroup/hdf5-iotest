@@ -90,14 +90,14 @@ int main(int argc, char* argv[])
   assert((dxpl = H5Pcreate(H5P_DATASET_XFER)) >= 0);
   assert((fapl = H5Pcreate(H5P_FILE_ACCESS)) >= 0);
 
-  if (size > 1 || (strncmp(config.single_process, "mpi-io", 16) == 0))
+  if (size > 1 || (strncmp(config.single_process, "mpi-io-uni", 16) == 0))
     assert(H5Pset_fapl_mpio(fapl, MPI_COMM_WORLD, MPI_INFO_NULL) >= 0);
   else
     if (strncmp(config.single_process, "core", 16) == 0)
       H5Pset_fapl_core(fapl, 67108864, 1); /* 64 MB increments */
 
   /* use a macro to stop the indentation madness */
-  
+
   /* ======================================================================== */
   /* dataset rank */
   TEST_FOR (irank = 2, irank <= 4, ++irank);
@@ -164,7 +164,7 @@ int main(int argc, char* argv[])
     }
 
   assert(H5Pset_meta_block_size(fapl, config.meta_block_size) >= 0);
-  
+
   /* ======================================================================== */
   /* lower libver bound */
   TEST_FOR (ifmt = 0, ifmt <= 1, ++ifmt);
@@ -230,7 +230,7 @@ int main(int argc, char* argv[])
   END_TEST /* MPI-IO mode */
   END_TEST /* libver bound */
   END_TEST /* alignment */
-  END_TEST /* meta block size */    
+  END_TEST /* meta block size */
   END_TEST /* fill */
   END_TEST /* layout */
   END_TEST /* slow dim. */
