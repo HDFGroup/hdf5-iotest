@@ -1,0 +1,8 @@
+darshan==0.0.7
+hvplot==0.7.0
+jupyter-core==4.7.1
+jupyterlab-pygments==0.1.2
+notebook==6.2.0
+numpy==1.20.1
+pandas==1.2.2
+panel==0.10.3
