@@ -77,7 +77,7 @@ int check_options
     return 0;  /* unknown name, error */
   }
 
-  return 1; 
+  return 1;
 }
 
 int handler(void* user,

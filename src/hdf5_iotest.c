@@ -17,6 +17,8 @@
 
 #include "hdf5.h"
 
+#include <uuid/uuid.h>
+
 #include <assert.h>
 #include <stdio.h>
 #include <string.h>
@@ -52,12 +54,14 @@ int main(int argc, char* argv[])
   double wall_time, create_time, write_phase, write_time, read_phase, read_time;
   timings ts;
 
+
   MPI_Init(&argc, &argv);
   MPI_Comm_size(MPI_COMM_WORLD, &size);
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
   if (rank == 0) /* rank 0 reads and checks the config. file */
     {
+      uuid_t uuid;
       /* sensible defaults */
       config.rank = 4;
 
@@ -66,6 +70,16 @@ int main(int argc, char* argv[])
           printf("Can't load '%s'\n", ini);
           return 1;
         }
+
+      uuid_generate_time_safe(uuid);
+      uuid_unparse_lower(uuid, config.csv_file);
+      config.csv_file[36] = '.';
+      config.csv_file[37] = 'c';
+      config.csv_file[38] = 's';
+      config.csv_file[39] = 'v';
+      config.csv_file[40] = '\0';
+
+      printf("Output: %s\n", config.csv_file);
     }
 
   /* broadcast the input parameters */
