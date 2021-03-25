@@ -19,17 +19,86 @@
 
 /*
  *
- * Create an anonymous dataset for the current configuration
- * (this then needs to be linked into the file)
+ * Initialize the dataset creation property list.
  *
  */
 
-hid_t create_dataset(const configuration* config, hid_t file, const char* name)
+hid_t create_dcpl(const configuration* config)
 {
-  hid_t result = -1, fspace, dcpl, lcpl;
+  hid_t result;
   unsigned int strong_scaling_flg, step_first_flg, chunked_flg;
   unsigned long total_rows, total_cols, my_rows, my_cols;
-  hsize_t dims[H5S_MAX_RANK], max_dims[H5S_MAX_RANK], cdims[H5S_MAX_RANK];
+  hsize_t cdims[H5S_MAX_RANK];
+
+  assert((result = H5Pcreate(H5P_DATASET_CREATE)) >= 0);
+
+  strong_scaling_flg = (strncmp(config->scaling, "strong", 16) == 0);
+  total_rows = strong_scaling_flg ?
+    config->rows : config->proc_rows*config->rows;
+  total_cols = strong_scaling_flg ?
+    config->cols : config->proc_cols*config->cols;
+  my_rows = strong_scaling_flg ? config->rows/config->proc_rows : config->rows;
+  my_cols = strong_scaling_flg ? config->cols/config->proc_cols : config->cols;
+
+  step_first_flg = (strncmp(config->slowest_dimension, "step", 16) == 0);
+  chunked_flg = (strncmp(config->layout, "chunked", 16) == 0);
+
+  if (chunked_flg)
+    {
+      switch (config->rank)
+        {
+        case 2:
+          cdims[0] = (hsize_t)my_rows;
+          cdims[1] = (hsize_t)my_cols;
+          break;
+        case 3:
+          cdims[0] = 1;
+          cdims[1] = (hsize_t)my_rows;
+          cdims[2] = (hsize_t)my_cols;
+          break;
+        case 4:
+          if (step_first_flg)
+            {
+              cdims[0] = 1;
+              cdims[1] = (hsize_t)config->arrays;
+            }
+          else
+            {
+              cdims[0] = (hsize_t)config->arrays;
+              cdims[1] = 1;
+            }
+          cdims[2] = (hsize_t)my_rows;
+          cdims[3] = (hsize_t)my_cols;
+          break;
+        default:
+          break;
+        }
+
+      assert(H5Pset_chunk(result, config->rank, cdims) >= 0);
+    }
+  else
+    assert(H5Pset_layout(result, H5D_CONTIGUOUS) >= 0);
+
+  if (strncmp(config->fill_values, "false", 8) == 0)
+    assert(H5Pset_fill_time(result, H5D_FILL_TIME_NEVER) >= 0);
+  else
+    assert(H5Pset_fill_time(result, H5D_FILL_TIME_ALLOC) >= 0);
+
+  return result;
+}
+
+/*
+ *
+ * Create the dataset's file space
+ *
+ */
+
+static hid_t create_fspace(const configuration* config)
+{
+  hid_t result = -1;
+  unsigned int strong_scaling_flg, step_first_flg, chunked_flg;
+  unsigned long total_rows, total_cols, my_rows, my_cols;
+  hsize_t dims[H5S_MAX_RANK], max_dims[H5S_MAX_RANK];
 
   strong_scaling_flg = (strncmp(config->scaling, "strong", 16) == 0);
   total_rows = strong_scaling_flg ?
@@ -47,11 +116,6 @@ hid_t create_dataset(const configuration* config, hid_t file, const char* name)
     case 2:
       max_dims[0] = dims[0] = (hsize_t)total_rows;
       max_dims[1] = dims[1] = (hsize_t)total_cols;
-      if (chunked_flg)
-        {
-          cdims[0] = (hsize_t)my_rows;
-          cdims[1] = (hsize_t)my_cols;
-        }
       break;
     case 3:
       max_dims[0] = dims[0] = (hsize_t)
@@ -62,9 +126,6 @@ hid_t create_dataset(const configuration* config, hid_t file, const char* name)
         {
           if (!step_first_flg)
             max_dims[0] = H5S_UNLIMITED;
-          cdims[0] = 1;
-          cdims[1] = (hsize_t)my_rows;
-          cdims[2] = (hsize_t)my_cols;
         }
       break;
     case 4:
@@ -77,48 +138,40 @@ hid_t create_dataset(const configuration* config, hid_t file, const char* name)
       if (chunked_flg)
         {
           if (step_first_flg)
-            {
-              cdims[0] = 1;
               max_dims[0] = H5S_UNLIMITED;
-              cdims[1] = (hsize_t)config->arrays;
-            }
           else
-            {
-              cdims[0] = (hsize_t)config->arrays;
               max_dims[1] = H5S_UNLIMITED;
-              cdims[1] = 1;
-            }
-          cdims[2] = (hsize_t)my_rows;
-          cdims[3] = (hsize_t)my_cols;
         }
       break;
     default:
       break;
     }
 
-  assert((fspace = H5Screate_simple(config->rank, dims, max_dims)) >= 0);
-
-  assert((dcpl = H5Pcreate(H5P_DATASET_CREATE)) >= 0);
-
-  if (strncmp(config->fill_values, "false", 8) == 0)
-    assert(H5Pset_fill_time(dcpl, H5D_FILL_TIME_NEVER) >= 0);
-  else
-    assert(H5Pset_fill_time(dcpl, H5D_FILL_TIME_ALLOC) >= 0);
-
-  if (chunked_flg)
-    assert(H5Pset_chunk(dcpl, config->rank, cdims) >= 0);
-
-  assert((lcpl = H5Pcreate(H5P_LINK_CREATE)) >= 0);
-  assert(H5Pset_create_intermediate_group(lcpl, 1) >= 0);
-
-  assert((result = H5Dcreate(file, name, H5T_NATIVE_DOUBLE, fspace,
-                             lcpl, dcpl, H5P_DEFAULT)) >= 0);
-  assert(H5Pclose(lcpl) >= 0);
-  assert(H5Pclose(dcpl) >= 0);
-  assert(H5Sclose(fspace) >= 0);
+  assert((result = H5Screate_simple(config->rank, dims, max_dims)) >= 0);
 
   return result;
 }
+
+/*
+ *
+ * Create an anonymous dataset for the current configuration
+ * (this then needs to be linked into the file)
+ *
+ */
+
+hid_t create_dataset(const configuration* config, hid_t file, const char* name,
+                     hid_t lcpl, hid_t dapl)
+{
+  hid_t result, fspace, dcpl;
+  assert((dcpl = create_dcpl(config)) >= 0);
+  assert((fspace = create_fspace(config)) >= 0);
+  assert((result = H5Dcreate(file, name, H5T_NATIVE_DOUBLE, fspace,
+                             lcpl, dcpl, dapl)) >= 0);
+  assert(H5Sclose(fspace) >= 0);
+  assert(H5Pclose(dcpl) >= 0);
+  return result;
+}
+
 
 /*
  *
@@ -127,11 +180,11 @@ hid_t create_dataset(const configuration* config, hid_t file, const char* name)
  */
 
 int create_selection(const configuration* config,
-                        hid_t fspace,
-                        const int proc_row,
-                        const int proc_col,
-                        const unsigned int step,
-                        const unsigned int array)
+                     hid_t fspace,
+                     const int proc_row,
+                     const int proc_col,
+                     const unsigned int step,
+                     const unsigned int array)
 {
   hid_t result = 0;
   unsigned int strong_scaling_flg, step_first_flg;

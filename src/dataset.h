@@ -18,9 +18,13 @@
 
 #include "hdf5.h"
 
+extern hid_t create_dcpl(const configuration* config);
+
 extern hid_t create_dataset(const configuration* config,
                             hid_t file,
-                            const char* name);
+                            const char* name,
+                            hid_t lcpl,
+                            hid_t dapl);
 
 extern int create_selection(const configuration* config,
                             hid_t fspace,

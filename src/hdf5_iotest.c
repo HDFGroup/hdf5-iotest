@@ -11,8 +11,8 @@
 
 */
 
-#include "utils.h"
 #include "read_test.h"
+#include "utils.h"
 #include "write_test.h"
 
 #include "hdf5.h"
@@ -47,7 +47,7 @@ int main(int argc, char* argv[])
   char* fmt_low[2]       = { "earliest", "latest" };
   char* mpi_mod[2]       = { "independent", "collective" };
 
-  hid_t dxpl, fapl;
+  hid_t fcpl, fapl, dapl, dxpl, lcpl;
 
   double wall_time, create_time, write_phase, write_time, read_phase, read_time;
   timings ts;
@@ -87,8 +87,12 @@ int main(int argc, char* argv[])
   my_rows = strong_scaling_flg ? config.rows/config.proc_rows : config.rows;
   my_cols = strong_scaling_flg ? config.cols/config.proc_cols : config.cols;
 
-  assert((dxpl = H5Pcreate(H5P_DATASET_XFER)) >= 0);
+  assert((fcpl = H5Pcreate(H5P_FILE_CREATE)) >= 0);
   assert((fapl = H5Pcreate(H5P_FILE_ACCESS)) >= 0);
+  assert((dapl = H5Pcreate(H5P_DATASET_ACCESS)) >= 0);
+  assert((dxpl = H5Pcreate(H5P_DATASET_XFER)) >= 0);
+  assert((lcpl = H5Pcreate(H5P_LINK_CREATE)) >= 0);
+  assert(H5Pset_create_intermediate_group(lcpl, 1) >= 0);
 
   if (size > 1 || (strncmp(config.single_process, "mpi-io-uni", 16) == 0))
     assert(H5Pset_fapl_mpio(fapl, MPI_COMM_WORLD, MPI_INFO_NULL) >= 0);
@@ -128,8 +132,6 @@ int main(int argc, char* argv[])
       align_thold[1] = config.alignment_threshold;
       config.alignment_increment = align_incr[0];
       config.alignment_threshold = align_thold[0];
-      assert(H5Pset_alignment(fapl, config.alignment_threshold,
-			      config.alignment_increment) >= 0);
     }
   else
     { /* check if we need to run anything beyond the baseline */
@@ -143,7 +145,7 @@ int main(int argc, char* argv[])
     }
 
   assert(H5Pset_alignment(fapl, config.alignment_threshold,
-			  config.alignment_increment) >= 0);
+                          config.alignment_increment) >= 0);
 
   /* ======================================================================== */
   /* meta block size */
@@ -158,9 +160,7 @@ int main(int argc, char* argv[])
       if (mblk_size[1] == 2048)
         continue;
       else
-        {
           config.meta_block_size = mblk_size[1];
-        }
     }
 
   assert(H5Pset_meta_block_size(fapl, config.meta_block_size) >= 0);
@@ -204,16 +204,17 @@ int main(int argc, char* argv[])
   read_time = write_time = create_time = 0.0;
 
   write_phase = -MPI_Wtime();
-  write_test(&config, size, rank, my_proc_row, my_proc_col,
-             my_rows, my_cols, fapl, dxpl,
+  write_test(&config, size, rank, my_proc_row, my_proc_col, my_rows, my_cols,
+             fcpl, fapl, lcpl, dapl, dxpl,
              &create_time, &write_time);
   write_phase += MPI_Wtime();
 
   MPI_Barrier(MPI_COMM_WORLD);
 
   read_phase = -MPI_Wtime();
-  read_test(&config, size, rank, my_proc_row, my_proc_col,
-            my_rows, my_cols, fapl, dxpl, &create_time, &read_time);
+  read_test(&config, size, rank, my_proc_row, my_proc_col, my_rows, my_cols,
+            fapl, dapl, dxpl,
+            &create_time, &read_time);
   read_phase += MPI_Wtime();
 
   MPI_Barrier(MPI_COMM_WORLD);
@@ -236,8 +237,11 @@ int main(int argc, char* argv[])
   END_TEST /* slow dim. */
   END_TEST /* rank */
 
-  assert(H5Pclose(fapl) >= 0);
+  assert(H5Pclose(lcpl) >= 0);
   assert(H5Pclose(dxpl) >= 0);
+  assert(H5Pclose(dapl) >= 0);
+  assert(H5Pclose(fapl) >= 0);
+  assert(H5Pclose(fcpl) >= 0);
 
   MPI_Finalize();
 

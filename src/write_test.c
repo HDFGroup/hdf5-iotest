@@ -29,7 +29,10 @@ void write_test
  int my_proc_col,
  unsigned long my_rows,
  unsigned long my_cols,
+ hid_t fcpl,
  hid_t fapl,
+ hid_t lcpl,
+ hid_t dapl,
  hid_t dxpl,
  double* create_time,
  double* write_time
@@ -83,8 +86,8 @@ void write_test
 #endif
 
   *create_time -= MPI_Wtime();
-  assert((file = H5Fcreate(pconfig->hdf5_file, H5F_ACC_TRUNC, H5P_DEFAULT,
-                           fapl)) >= 0);
+  assert((file = H5Fcreate(pconfig->hdf5_file, H5F_ACC_TRUNC, fcpl, fapl))
+         >= 0);
   *create_time += MPI_Wtime();
 
   switch (pconfig->rank)
@@ -93,7 +96,8 @@ void write_test
       {
         /* a single 4D array */
         *create_time -= MPI_Wtime();
-        assert((dset = create_dataset(pconfig, file, "dataset")) >= 0);
+        assert((dset = create_dataset(pconfig, file, "dataset", lcpl, dapl))
+               >= 0);
         *create_time += MPI_Wtime();
 
         for (istep = 0; istep < pconfig->steps; ++istep)
@@ -130,7 +134,8 @@ void write_test
               {
                 *create_time -= MPI_Wtime();
                 sprintf(path, "step=%d", istep);
-                assert((dset = create_dataset(pconfig, file, path)) >= 0);
+                assert((dset = create_dataset(pconfig, file, path, lcpl, dapl))
+                       >= 0);
                 *create_time += MPI_Wtime();
 
                 for (iarray = 0; iarray < pconfig->arrays; ++iarray)
@@ -161,20 +166,14 @@ void write_test
                 for (iarray = 0; iarray < pconfig->arrays; ++iarray)
                   {
                     sprintf(path, "array=%d", iarray);
-                    if (istep == 0)
-                      {
-                        *create_time -= MPI_Wtime();
-                        assert((dset = create_dataset(pconfig, file, path))
-                               >= 0);
-                        *create_time += MPI_Wtime();
-                      }
+                    *create_time -= MPI_Wtime();
+                    if (istep > 0)
+                      assert((dset = H5Dopen(file, path, dapl)) >= 0);
                     else
-                      {
-                        *create_time -= MPI_Wtime();
-                        assert((dset = H5Dopen(file, path, H5P_DEFAULT)) >=
-                               0);
-                        *create_time += MPI_Wtime();
-                      }
+                      assert((dset = create_dataset(pconfig, file, path,
+                                                    lcpl, dapl)) >= 0);
+                    *create_time += MPI_Wtime();
+
 #ifdef VERIFY_DATA
                     d[0] = pconfig->arrays; d[1] = pconfig->steps;
                     o[0] = iarray; o[1] = istep;
@@ -197,10 +196,6 @@ void write_test
       break;
     case 2:
       {
-        hid_t lcpl = H5Pcreate(H5P_LINK_CREATE);
-        assert(lcpl >= 0);
-        assert(H5Pset_create_intermediate_group(lcpl, 1) >= 0);
-
         for (istep = 0; istep < pconfig->steps; ++istep)
           {
             for (iarray = 0; iarray < pconfig->arrays; ++iarray)
@@ -211,7 +206,8 @@ void write_test
                                "step=%d/array=%d" : "array=%d/step=%d"),
                         (step_first_flg ? istep : iarray),
                         (step_first_flg ? iarray : istep));
-                assert((dset = create_dataset(pconfig, file, path)) >= 0);
+                assert((dset = create_dataset(pconfig, file, path,
+                                              lcpl, dapl)) >= 0);
                 *create_time += MPI_Wtime();
 
 #ifdef VERIFY_DATA
@@ -234,8 +230,6 @@ void write_test
                 H5Dclose(dset);
               }
           }
-
-        H5Pclose(lcpl);
       }
       break;
     default:
