@@ -36,7 +36,7 @@ void read_test
  double* read_time
  )
 {
-  unsigned int step_first_flg;
+  unsigned int step_first_flg, strong_scaling_flg;
   unsigned int istep, iarray;
   double *rbuf;
   hid_t mspace;
@@ -68,6 +68,19 @@ void read_test
     mspace = H5Screate_simple(2, dims, dims);
     assert(H5Sselect_all(mspace) >= 0);
   }
+
+#ifdef VERIFY_DATA
+  strong_scaling_flg = (strncmp(pconfig->scaling, "strong", 16) == 0);
+
+  d[2] = strong_scaling_flg ? pconfig->rows : pconfig->rows * pconfig->proc_rows;
+  d[3] = strong_scaling_flg ? pconfig->cols : pconfig->cols * pconfig->proc_cols;
+
+  o[2] = strong_scaling_flg ? rank * my_rows : my_proc_row * pconfig->rows;
+  o[3] = strong_scaling_flg ? rank * my_cols : my_proc_col * pconfig->cols;
+
+  printf("\nWARNING: Data verification enabled. Timings will be distorted!!!\n");
+#endif
+
 
   assert((file = H5Fopen(pconfig->hdf5_file, H5F_ACC_RDONLY, fapl)) >= 0);
 

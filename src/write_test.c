@@ -38,7 +38,7 @@ void write_test
  double* write_time
  )
 {
-  unsigned int step_first_flg;
+  unsigned int step_first_flg, strong_scaling_flg;
   unsigned int istep, iarray;
   double *wbuf;
   hid_t mspace;
@@ -73,11 +73,13 @@ void write_test
   }
 
 #ifdef VERIFY_DATA
-  d[2] = strong_scaling_flg ? config.rows : config.rows * config.proc_rows;
-  d[3] = strong_scaling_flg ? config.cols : config.cols * config.proc_cols;
+  strong_scaling_flg = (strncmp(pconfig->scaling, "strong", 16) == 0);
 
-  o[2] = strong_scaling_flg ? rank * my_rows : my_proc_row * config.rows;
-  o[3] = strong_scaling_flg ? rank * my_cols : my_proc_col * config.cols;
+  d[2] = strong_scaling_flg ? pconfig->rows : pconfig->rows * pconfig->proc_rows;
+  d[3] = strong_scaling_flg ? pconfig->cols : pconfig->cols * pconfig->proc_cols;
+
+  o[2] = strong_scaling_flg ? rank * my_rows : my_proc_row * pconfig->rows;
+  o[3] = strong_scaling_flg ? rank * my_cols : my_proc_col * pconfig->cols;
 
   printf("\nWARNING: Data verification enabled. Timings will be distorted!!!\n");
 #else

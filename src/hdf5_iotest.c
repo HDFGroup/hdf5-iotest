@@ -112,7 +112,9 @@ int main(int argc, char* argv[])
     assert(H5Pset_fapl_mpio(fapl, MPI_COMM_WORLD, MPI_INFO_NULL) >= 0);
   else
     if (strncmp(config.single_process, "core", 16) == 0)
-      H5Pset_fapl_core(fapl, 67108864, 1); /* 64 MB increments */
+      assert(H5Pset_fapl_core(fapl, 67108864, 1) >= 0); /* 64 MB increments */
+    else
+      assert(H5Pset_fapl_sec2(fapl) >= 0);
 
   /* use a macro to stop the indentation madness */
 
@@ -244,8 +246,8 @@ int main(int argc, char* argv[])
 
   END_TEST /* MPI-IO mode */
   END_TEST /* libver bound */
-  END_TEST /* alignment */
   END_TEST /* meta block size */
+  END_TEST /* alignment */
   END_TEST /* fill */
   END_TEST /* layout */
   END_TEST /* slow dim. */

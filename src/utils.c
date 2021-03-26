@@ -80,7 +80,7 @@ void print_results
 
 void print_initial_config(const char* ini, configuration* pconfig)
 {
-  printf("Config loaded from '%s':\n  steps=%d, arrays=%d,"
+  printf("Config loaded from '%s':\n  steps=%d, arrays=%d, "
          "rows=%ld, columns=%ld, proc-grid=%dx%d, scaling=%s\n",
          ini, pconfig->steps, pconfig->arrays, pconfig->rows, pconfig->cols,
          pconfig->proc_rows, pconfig->proc_cols, pconfig->scaling
