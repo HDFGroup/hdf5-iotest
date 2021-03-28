@@ -114,8 +114,10 @@ void write_test
                 init_write_buffer(wbuf, &my_rows, &my_cols, d, o);
 #endif
                 assert((fspace = H5Dget_space(dset)) >= 0);
+                *create_time -= MPI_Wtime();
                 create_selection(pconfig, fspace, my_proc_row, my_proc_col,
                                  istep, iarray);
+                *create_time += MPI_Wtime();
 
                 *write_time -= MPI_Wtime();
                 assert(H5Dwrite(dset, H5T_NATIVE_DOUBLE, mspace, fspace,
@@ -148,8 +150,10 @@ void write_test
                     init_write_buffer(wbuf, &my_rows, &my_cols, d, o);
 #endif
                     assert((fspace = H5Dget_space(dset)) >= 0);
+                    *create_time -= MPI_Wtime();
                     create_selection(pconfig, fspace, my_proc_row,
                                      my_proc_col, istep, iarray);
+                    *create_time += MPI_Wtime();
 
                     *write_time -= MPI_Wtime();
                     assert(H5Dwrite(dset, H5T_NATIVE_DOUBLE, mspace, fspace,
@@ -182,8 +186,10 @@ void write_test
                     init_write_buffer(wbuf, &my_rows, &my_cols, d, o);
 #endif
                     assert((fspace = H5Dget_space(dset)) >= 0);
+                    *create_time -= MPI_Wtime();
                     create_selection(pconfig, fspace, my_proc_row,
                                      my_proc_col, istep, iarray);
+                    *create_time += MPI_Wtime();
 
                     *write_time -= MPI_Wtime();
                     assert(H5Dwrite(dset, H5T_NATIVE_DOUBLE, mspace, fspace,
@@ -221,8 +227,10 @@ void write_test
 #endif
 
                 assert((fspace = H5Dget_space(dset)) >= 0);
+                *create_time -= MPI_Wtime();
                 create_selection(pconfig, fspace, my_proc_row, my_proc_col,
                                  istep, iarray);
+                *create_time += MPI_Wtime();
 
                 *write_time -= MPI_Wtime();
                 assert(H5Dwrite(dset, H5T_NATIVE_DOUBLE, mspace, fspace,
