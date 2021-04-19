@@ -113,6 +113,8 @@ int main(int argc, char* argv[])
   else
     if (strncmp(config.single_process, "core", 16) == 0)
       assert(H5Pset_fapl_core(fapl, 67108864, 1) >= 0); /* 64 MB increments */
+    if (strncmp(config.single_process, "hermes", 16) == 0)
+      assert(H5Pset_fapl_hermes(fapl) >= 0);
     else
       assert(H5Pset_fapl_sec2(fapl) >= 0);
 

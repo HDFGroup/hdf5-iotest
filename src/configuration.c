@@ -132,7 +132,8 @@ int validate(configuration* pconfig, const int size)
 
   assert(strncmp(pconfig->single_process, "posix", 16) == 0 ||
          strncmp(pconfig->single_process, "core", 16) == 0  ||
-         strncmp(pconfig->single_process, "mpi-io-uni", 16) == 0);
+         strncmp(pconfig->single_process, "mpi-io-uni", 16) == 0  ||
+         strncmp(pconfig->single_process, "hermes", 16) == 0);
 
   return 0;
 }
