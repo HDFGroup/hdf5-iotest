@@ -140,7 +140,7 @@ make install
 
 =hdf5_iotest= accepts a single argument, the name of a configuration file. If no
 configuration file name is provided, it looks for a configuration named
-=hdf5-iotest.ini= in the current working directory.
+=hdf5_iotest.ini= in the current working directory.
 
 #+begin_src sh
 hdf5_iotest [INI file]
