@@ -7,7 +7,7 @@
 
 * Description
 
-This is a simple I/O performance tester for HDF5.  (See also [[https://github.com/ornladios/ADIOS2/tree/master/source/utils/adios_iotest][ADIOS IOTEST]].) It's
+This is a simple I/O performance tester for HDF5.  (See also [[https://github.com/ornladios/ADIOS2/tree/master/source/utils/adios_iotest][ADIOS IOTEST]].) Its
 purpose is to assess the /performance variability/ of a set of logically
 equivalent HDF5 representations of a common pattern. The test repeatedly writes
 (and reads) in parallel a set of 2D array variables in a tiled fashion, over a
@@ -54,7 +54,7 @@ stop
 A configuration file (see below) is used to control parameters such as the
 number of steps, the count and shape of the 2D array variables, etc. (See
 section [[sec:parameters]].) The test then uses between 48 and 192 different
-combinations of up to 7 internal parameter (see section [[sec:internal-parameters]])
+combinations of up to 7 internal parameters (see section [[sec:internal-parameters]])
 to configure the HDF5 library and output, to perform write and read operations,
 and to report certain timings. (The number of combinations is different for
 sequential and parallel runs, and depends on other choices.)
@@ -67,7 +67,7 @@ is the proverbial "getting off on the wrong foot."
 
 * Installation
 
-While it can be build manually, we recommend building =hdf5_iotest= from [[https://computing.llnl.gov/projects/spack-hpc-package-manager][Spack]].
+While it can be built manually, we recommend building =hdf5_iotest= from [[https://computing.llnl.gov/projects/spack-hpc-package-manager][Spack]].
 
 1. Create a new Spack package
    #+begin_src sh
@@ -241,7 +241,7 @@ The following configuration parameters are supported.
     alignment-increment = 1
     #+end_src
 
-  By default there are no alignment restrictions in effect, and only
+  By default, there are no alignment restrictions in effect, and only
   increments greater than 1 have any effect.
 
 - Alignment Threshold :: The minimum object size (in bytes) for which alignment
@@ -284,7 +284,7 @@ The following configuration parameters are supported.
  hdf5-file = hdf5_iotest.h5
     #+end_src
 
-- Results File :: When running HDF5 I/O test, certain metrics are printed to
+- Results File :: When running the HDF5 I/O test, certain metrics are printed to
                   =stdout=. To simplify the analysis of results from multiple
                   runs, they are also written to a CSV file whose name is
                   configurable.
@@ -305,7 +305,7 @@ Currently, the I/O test varies the following parameters:
 - Storage Layout :: The dataset storage layout in the HDF5 file can be chunked
   or contiguous (or compact or virtual or user-defined).
 - Alignment :: HDF5 objects greater than or equal to an alignment threshold can
-  be aligned on addresses which are a multiple of a certain increment.
+  be aligned on addresses that are a multiple of a certain increment.
 - Lower Library Version Bound  :: The HDF5 library can be configured to use the
   earliest or latest available file format micro-versions when generating
   objects.
