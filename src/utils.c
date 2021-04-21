@@ -42,7 +42,8 @@ void print_results
  )
 {
   hid_t file;
-  hsize_t fsize;
+  hsize_t fsize,fsize_units;
+
   unsigned majnum, minnum, relnum;
   char version[16];
   assert(H5get_libversion(&majnum, &minnum, &relnum) >= 0);
@@ -53,8 +54,18 @@ void print_results
   assert(H5Fclose(file) >= 0);
 
   /* write summary to the console */
-  printf("Wall clock [s]:\t\t%.2f\n", wall_time);
-  printf("File size [B]:\t\t%.0f\n", (double)fsize);
+  printf("Wall clock  [s]:\t\t%.2f\n", wall_time);
+
+  static const char *UNIT[] = { "B", "kiB", "MiB", "GiB", "TiB", "PiB", "EiB" };
+  hsize_t cnt = 0;
+  hsize_t rem = 0;
+  fsize_units=fsize;
+  while (fsize_units >= 1024 && cnt < (sizeof UNIT / sizeof *UNIT)) {
+    rem = (fsize_units % 1024);
+    fsize_units /= 1024;
+    cnt++;
+  }
+  printf("File size [%s]:\t\t%.1f\n", UNIT[cnt], (float)fsize_units + (float)rem / 1024.0);
 
   { /* write results to the CSV file */
     FILE *fptr = fopen(pconfig->csv_file, "a");
