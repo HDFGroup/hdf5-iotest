@@ -26,7 +26,7 @@ extern void read_test
  int my_proc_col,
  unsigned long my_rows,
  unsigned long my_cols,
- hid_t fapl,
+ hid_t file,
  hid_t dapl,
  hid_t dxpl,
  double* create_time,

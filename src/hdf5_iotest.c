@@ -49,7 +49,7 @@ int main(int argc, char* argv[])
   char* fmt_low[2]       = { "earliest", "latest" };
   char* mpi_mod[2]       = { "independent", "collective" };
 
-  hid_t fcpl, fapl, dapl, dxpl, lcpl;
+  hid_t fcpl, fapl, file, dapl, dxpl, lcpl;
 
   double wall_time, create_time, write_phase, write_time, read_phase, read_time;
   timings ts;
@@ -222,7 +222,7 @@ int main(int argc, char* argv[])
   read_time = write_time = create_time = 0.0;
 
   write_phase = -MPI_Wtime();
-  write_test(&config, size, rank, my_proc_row, my_proc_col, my_rows, my_cols,
+  file = write_test(&config, size, rank, my_proc_row, my_proc_col, my_rows, my_cols,
              fcpl, fapl, lcpl, dapl, dxpl,
              &create_time, &write_time);
   write_phase += MPI_Wtime();
@@ -231,7 +231,7 @@ int main(int argc, char* argv[])
 
   read_phase = -MPI_Wtime();
   read_test(&config, size, rank, my_proc_row, my_proc_col, my_rows, my_cols,
-            fapl, dapl, dxpl,
+            file, dapl, dxpl,
             &create_time, &read_time);
   read_phase += MPI_Wtime();
 
