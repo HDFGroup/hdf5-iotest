@@ -42,15 +42,15 @@ void print_results
  )
 {
   hid_t file;
-  hsize_t fsize;
+  hsize_t fsize = 0;
   unsigned majnum, minnum, relnum;
   char version[16];
   assert(H5get_libversion(&majnum, &minnum, &relnum) >= 0);
   snprintf(version, 16, "\"%d.%d.%d\"", majnum, minnum, relnum);
 
-  assert((file = H5Fopen(pconfig->hdf5_file, H5F_ACC_RDONLY, H5P_DEFAULT)) >= 0);
-  assert(H5Fget_filesize(file, &fsize) >= 0);
-  assert(H5Fclose(file) >= 0);
+  //assert((file = H5Fopen(pconfig->hdf5_file, H5F_ACC_RDONLY, H5P_DEFAULT)) >= 0);
+  //assert(H5Fget_filesize(file, &fsize) >= 0);
+  //assert(H5Fclose(file) >= 0);
 
   /* write summary to the console */
   printf("Wall clock [s]:\t\t%.2f\n", wall_time);
