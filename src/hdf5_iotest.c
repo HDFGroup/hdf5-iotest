@@ -64,20 +64,24 @@ int main(int argc, char* argv[])
       uuid_t uuid;
       /* sensible defaults */
       config.rank = 4;
+      config.hdf5_file[0] = '\0';
+      config.csv_file[0] = '\0';
 
       if (ini_parse(ini, handler, &config) < 0)
         {
           printf("Can't load '%s'\n", ini);
           return 1;
         }
-
-      uuid_generate_time_safe(uuid);
-      uuid_unparse_lower(uuid, config.csv_file);
-      config.csv_file[36] = '.';
-      config.csv_file[37] = 'c';
-      config.csv_file[38] = 's';
-      config.csv_file[39] = 'v';
-      config.csv_file[40] = '\0';
+      if (config.csv_file[0] == '\0')
+        {
+          uuid_generate_time_safe(uuid);
+          uuid_unparse_lower(uuid, config.csv_file);
+          config.csv_file[36] = '.';
+          config.csv_file[37] = 'c';
+          config.csv_file[38] = 's';
+          config.csv_file[39] = 'v';
+          config.csv_file[40] = '\0';
+        }
 
       printf("Output: %s\n", config.csv_file);
     }
