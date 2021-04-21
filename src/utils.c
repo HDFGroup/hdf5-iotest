@@ -60,8 +60,8 @@ void print_results
   hsize_t cnt = 0;
   hsize_t rem = 0;
   fsize_units=fsize;
-  while (fsize_units >= 1024 && cnt < (sizeof UNIT / sizeof *UNIT)) {
-    rem = (fsize_units % 1024);
+  while (fsize_units >= 1024 && cnt < (sizeof(UNIT) / sizeof(*UNIT))) {
+    rem = fsize_units % 1024;
     fsize_units /= 1024;
     cnt++;
   }
