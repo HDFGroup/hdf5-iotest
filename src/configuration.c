@@ -73,6 +73,8 @@ int check_options
     strncpy(pconfig->hdf5_file, value, PATH_MAX-1);
   } else if (MATCH(section, "csv-file")) {
     strncpy(pconfig->csv_file, value, PATH_MAX-1);
+  } else if (MATCH(section, "restart")) {
+    pconfig->restart = (unsigned int) atol(value);
   } else {
     return 0;  /* unknown name, error */
   }

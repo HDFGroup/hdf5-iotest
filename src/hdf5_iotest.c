@@ -27,6 +27,7 @@
 #define  END_TEST }
 
 #define CONFIG_FILE "hdf5_iotest.ini"
+#define RESTART_FILE "hdf5_iotest.chckpt"
 
 int main(int argc, char* argv[])
 {
@@ -39,6 +40,8 @@ int main(int argc, char* argv[])
   unsigned long my_rows, my_cols;
 
   unsigned int irank, islow, ifill, ilay, ialig, imblk, ifmt, imod;
+  unsigned int ckpt_flg;
+  restart_t ckpt;
 
   char* slow_dim[2]      = { "step", "array" };
   char* fill[2]          = { "true", "false" };
@@ -59,6 +62,7 @@ int main(int argc, char* argv[])
   MPI_Comm_size(MPI_COMM_WORLD, &size);
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
+
   if (rank == 0) /* rank 0 reads and checks the config. file */
     {
       uuid_t uuid;
@@ -66,6 +70,7 @@ int main(int argc, char* argv[])
       config.rank = 4;
       config.hdf5_file[0] = '\0';
       config.csv_file[0] = '\0';
+      config.restart = 0;
 
       if (ini_parse(ini, handler, &config) < 0)
         {
@@ -94,12 +99,32 @@ int main(int argc, char* argv[])
   if (rank == 0)
     print_initial_config(ini, &config);
 
+  ckpt_flg = 0;
+  if (config.restart == 1) {
+    if (rank == 0) /* rank 0 reads the last successful configuration */
+      {
+        restart(ckpt, 
+                config.csv_file,
+                slow_dim,
+                fill,
+                layout,
+                fmt_low,
+                mpi_mod);
+      }
+    /* broadcast the restart parameters */
+    MPI_Bcast(&ckpt, sizeof(ckpt), MPI_BYTE, 0, MPI_COMM_WORLD);
+
+    ckpt_flg = 1;
+    MPI_Abort(MPI_COMM_WORLD,-1);
+  }
+
   my_proc_row = rank / config.proc_cols;
   my_proc_col = rank % config.proc_cols;
 
   /* create the output CSV file */
-  if (rank == 0)
+  if (rank == 0 && config.restart == 0)
     create_output_file(config.csv_file);
+  /* create the output checkpoint restart file */
 
   strong_scaling_flg = (strncmp(config.scaling, "strong", 16) == 0);
   my_rows = strong_scaling_flg ? config.rows/config.proc_rows : config.rows;
@@ -124,28 +149,33 @@ int main(int argc, char* argv[])
 
   /* ======================================================================== */
   /* dataset rank */
-  TEST_FOR (irank = 2, irank <= 4, ++irank);
+  TEST_FOR (irank = 0, irank <= 4, ++irank);
+  if(config.restart && ckpt_flg) irank = ckpt.irank;
   config.rank = irank;
 
   /* ======================================================================== */
   /* slowest changing dimension */
   TEST_FOR (islow = 0, islow <= 1, ++islow);
+  if(config.restart && ckpt_flg) islow= ckpt.islow;
   strncpy(config.slowest_dimension, slow_dim[islow],
           sizeof(config.slowest_dimension));
 
   /* ======================================================================== */
   /* dataset layout */
   TEST_FOR (ilay = 0, ilay <= 1, ++ilay);
+  if(config.restart && ckpt_flg) ilay = ckpt.ilay;
   strncpy(config.layout, layout[ilay], sizeof(config.layout));
 
   /* ======================================================================== */
   /* write fill values */
   TEST_FOR (ifill = 0, ifill <= 1, ++ifill);
+  if(config.restart && ckpt_flg) ifill = ckpt.ifill;
   strncpy(config.fill_values, fill[ifill], sizeof(config.fill_values));
 
   /* ======================================================================== */
   /* alignment */
   TEST_FOR (ialig = 0, ialig <= 1, ++ialig);
+  if(config.restart && ckpt_flg)  ialig = ckpt.ialig;
   if (ialig == 0) /* run the baseline first */
     {
       align_incr[1]  = config.alignment_increment;
@@ -170,6 +200,7 @@ int main(int argc, char* argv[])
   /* ======================================================================== */
   /* meta block size */
   TEST_FOR (imblk = 0, imblk <= 1, ++imblk);
+  if(config.restart && ckpt_flg)  imblk = ckpt.imblk;
   if (imblk == 0) /* run the baseline first */
     {
       mblk_size[1]  = config.meta_block_size;
@@ -188,6 +219,7 @@ int main(int argc, char* argv[])
   /* ======================================================================== */
   /* lower libver bound */
   TEST_FOR (ifmt = 0, ifmt <= 1, ++ifmt);
+  if(config.restart && ckpt_flg)  imblk = ckpt.ifmt;
   strncpy(config.libver_bound_low, fmt_low[ifmt],
           sizeof(config.libver_bound_low));
   assert(set_libver_bounds(&config, rank, fapl) >= 0);
@@ -195,6 +227,10 @@ int main(int argc, char* argv[])
   /* ======================================================================== */
   /* MPI-IO mode */
   TEST_FOR (imod = 0, imod <= 1, ++imod);
+  if(config.restart && ckpt_flg) {
+    imod = ckpt.imod;
+    ckpt_flg = 0;
+  }
   if (size > 1)
     {
       strncpy(config.mpi_io, mpi_mod[imod], sizeof(config.mpi_io)-1);
