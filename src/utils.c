@@ -287,13 +287,11 @@ void restart(
           if(icnt == 8) {
             ckpt->irank = atoi(ptr);
           } else if(icnt == 10) {
-            hsize_t ii = atoi(ptr);
-            if(ii != align_incr[0])
+            if( (hsize_t)atoi(ptr) != align_incr[0])
               ckpt->ialig = 1;
           } else if(icnt == 12) {
-            hsize_t ii = atoi(ptr);
-            if( ii != mblk_size[0] )
-              ckpt->imblk = 1;
+            if( (hsize_t)atoi(ptr) == mblk_size[0] )
+              ckpt->imblk = 0;
           }
           icnt++;
           ptr = strtok(NULL, delim);
