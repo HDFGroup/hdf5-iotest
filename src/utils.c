@@ -229,7 +229,7 @@ herr_t set_libver_bounds(configuration* pconfig, int rank, hid_t fapl)
 
 /*
  *
- * Restart from last fully completed 
+ * Restart from last fully completed configuration
  *
  */
 
@@ -257,8 +257,8 @@ void restart(
       char *last_newline = strrchr(buf, '\n'); /* find last occurrence of newline */
       char *last_line = last_newline+1;        /* jump to it */
       
-      printf("last line: [%s]\n", last_line);
-      printf("layout %s\n",layout[1]);
+      printf("RESTARTING FROM LAST LINE: [%s]\n", last_line);
+
       if( strstr(last_line, slow_dim[1]) != NULL) {
         ckpt->islow = 1;
       } 
@@ -299,7 +299,7 @@ void restart(
     }
 
   /* Repeating the last successful configuration,
-     so remove the last line */
+     so remove the last line to avoid duplicate lines */
   int len = strlen(fname);
   char command[ len + 12];
   strcpy(command, "sed -i '$d' ");

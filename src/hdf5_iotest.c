@@ -145,7 +145,6 @@ int main(int argc, char* argv[])
 
   /* use a macro to stop the indentation madness */
 
-  printf("RANK %d %d\n",config.rank,ckpt.irank);
   /* ======================================================================== */
   /* dataset rank */
   TEST_FOR (irank = 2, irank <= 4, ++irank);
@@ -174,7 +173,13 @@ int main(int argc, char* argv[])
   /* ======================================================================== */
   /* alignment */
   TEST_FOR (ialig = 0, ialig <= 1, ++ialig);
-  if(config.restart == 1 && ckpt_flg == 1) ialig = ckpt.ialig;
+  if(config.restart == 1 && ckpt_flg == 1) {
+    ialig = ckpt.ialig;
+    if (ialig == 1) {
+      align_incr[1]  = config.alignment_increment;
+      align_thold[1] = config.alignment_threshold;
+    }
+  }
   if (ialig == 0) /* run the baseline first */
     {
       align_incr[1]  = config.alignment_increment;
@@ -199,7 +204,12 @@ int main(int argc, char* argv[])
   /* ======================================================================== */
   /* meta block size */
   TEST_FOR (imblk = 0, imblk <= 1, ++imblk);
-  if(config.restart == 1 && ckpt_flg == 1) imblk = ckpt.imblk;
+  if(config.restart == 1 && ckpt_flg == 1) {
+    imblk = ckpt.imblk;
+    if (imblk == 1) {
+      mblk_size[1]  = config.meta_block_size;
+    }
+  }
   if (imblk == 0) /* run the baseline first */
     {
       mblk_size[1]  = config.meta_block_size;
