@@ -240,7 +240,9 @@ void restart(
              char* fill[],
              char* layout[],
              char* fmt_low[],
-             char* mpi_mod[]
+             char* mpi_mod[],
+             hsize_t mblk_size[],
+             hsize_t align_incr[]
 )
 {
   FILE *fptr;                         /* File pointer */
@@ -285,13 +287,13 @@ void restart(
           if(icnt == 8) {
             ckpt->irank = atoi(ptr);
           } else if(icnt == 10) {
-            uint ii = atoi(ptr);
-            if(ii != 1)
+            hsize_t ii = atoi(ptr);
+            if(ii != align_incr[0])
               ckpt->ialig = 1;
           } else if(icnt == 12) {
-            uint ii = atoi(ptr);
-            if( ii != 2048 )
-              ckpt->imblk = 0;
+            hsize_t ii = atoi(ptr);
+            if( ii != mblk_size[0] )
+              ckpt->imblk = 1;
           }
           icnt++;
           ptr = strtok(NULL, delim);

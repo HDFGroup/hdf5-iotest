@@ -109,7 +109,9 @@ int main(int argc, char* argv[])
                 fill,
                 layout,
                 fmt_low,
-                mpi_mod);
+                mpi_mod,
+                mblk_size,
+                align_incr);
       }
     /* broadcast the restart parameters */
     MPI_Bcast(&ckpt, sizeof(ckpt), MPI_BYTE, 0, MPI_COMM_WORLD);

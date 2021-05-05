@@ -76,7 +76,9 @@ void restart(
              char* fill[],
              char* layout[],
              char* fmt_low[],
-             char* mpi_mod[]
+             char* mpi_mod[],
+             hsize_t mblk_size[],
+             hsize_t align_incr[]
 );
 
 #endif
