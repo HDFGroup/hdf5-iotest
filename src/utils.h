@@ -70,7 +70,7 @@ void print_results
 herr_t set_libver_bounds(configuration* config, int rank, hid_t fapl);
 
 void restart(
-             restart_t ckpt, 
+             restart_t *ckpt, 
              const char* fname,
              char* slow_dim[],
              char* fill[],

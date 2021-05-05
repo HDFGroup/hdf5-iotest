@@ -103,7 +103,7 @@ int main(int argc, char* argv[])
   if (config.restart == 1) {
     if (rank == 0) /* rank 0 reads the last successful configuration */
       {
-        restart(ckpt, 
+        restart(&ckpt, 
                 config.csv_file,
                 slow_dim,
                 fill,
@@ -113,9 +113,7 @@ int main(int argc, char* argv[])
       }
     /* broadcast the restart parameters */
     MPI_Bcast(&ckpt, sizeof(ckpt), MPI_BYTE, 0, MPI_COMM_WORLD);
-
     ckpt_flg = 1;
-    MPI_Abort(MPI_COMM_WORLD,-1);
   }
 
   my_proc_row = rank / config.proc_cols;
@@ -147,35 +145,36 @@ int main(int argc, char* argv[])
 
   /* use a macro to stop the indentation madness */
 
+  printf("RANK %d %d\n",config.rank,ckpt.irank);
   /* ======================================================================== */
   /* dataset rank */
-  TEST_FOR (irank = 0, irank <= 4, ++irank);
-  if(config.restart && ckpt_flg) irank = ckpt.irank;
+  TEST_FOR (irank = 2, irank <= 4, ++irank);
+  if(config.restart == 1 && ckpt_flg == 1) irank = ckpt.irank;
   config.rank = irank;
 
   /* ======================================================================== */
   /* slowest changing dimension */
   TEST_FOR (islow = 0, islow <= 1, ++islow);
-  if(config.restart && ckpt_flg) islow= ckpt.islow;
+  if(config.restart == 1 && ckpt_flg == 1) islow= ckpt.islow;
   strncpy(config.slowest_dimension, slow_dim[islow],
           sizeof(config.slowest_dimension));
 
   /* ======================================================================== */
   /* dataset layout */
   TEST_FOR (ilay = 0, ilay <= 1, ++ilay);
-  if(config.restart && ckpt_flg) ilay = ckpt.ilay;
+  if(config.restart == 1 && ckpt_flg == 1) ilay = ckpt.ilay;
   strncpy(config.layout, layout[ilay], sizeof(config.layout));
 
   /* ======================================================================== */
   /* write fill values */
   TEST_FOR (ifill = 0, ifill <= 1, ++ifill);
-  if(config.restart && ckpt_flg) ifill = ckpt.ifill;
+  if(config.restart == 1 && ckpt_flg == 1) ifill = ckpt.ifill;
   strncpy(config.fill_values, fill[ifill], sizeof(config.fill_values));
 
   /* ======================================================================== */
   /* alignment */
   TEST_FOR (ialig = 0, ialig <= 1, ++ialig);
-  if(config.restart && ckpt_flg)  ialig = ckpt.ialig;
+  if(config.restart == 1 && ckpt_flg == 1) ialig = ckpt.ialig;
   if (ialig == 0) /* run the baseline first */
     {
       align_incr[1]  = config.alignment_increment;
@@ -200,7 +199,7 @@ int main(int argc, char* argv[])
   /* ======================================================================== */
   /* meta block size */
   TEST_FOR (imblk = 0, imblk <= 1, ++imblk);
-  if(config.restart && ckpt_flg)  imblk = ckpt.imblk;
+  if(config.restart == 1 && ckpt_flg == 1) imblk = ckpt.imblk;
   if (imblk == 0) /* run the baseline first */
     {
       mblk_size[1]  = config.meta_block_size;
@@ -213,13 +212,12 @@ int main(int argc, char* argv[])
       else
           config.meta_block_size = mblk_size[1];
     }
-
   assert(H5Pset_meta_block_size(fapl, config.meta_block_size) >= 0);
 
   /* ======================================================================== */
   /* lower libver bound */
   TEST_FOR (ifmt = 0, ifmt <= 1, ++ifmt);
-  if(config.restart && ckpt_flg)  imblk = ckpt.ifmt;
+  if(config.restart == 1 && ckpt_flg == 1)  imblk = ckpt.ifmt;
   strncpy(config.libver_bound_low, fmt_low[ifmt],
           sizeof(config.libver_bound_low));
   assert(set_libver_bounds(&config, rank, fapl) >= 0);
@@ -227,7 +225,7 @@ int main(int argc, char* argv[])
   /* ======================================================================== */
   /* MPI-IO mode */
   TEST_FOR (imod = 0, imod <= 1, ++imod);
-  if(config.restart && ckpt_flg) {
+  if(config.restart == 1 && ckpt_flg == 1) {
     imod = ckpt.imod;
     ckpt_flg = 0;
   }
