@@ -229,7 +229,7 @@ int main(int argc, char* argv[])
   /* ======================================================================== */
   /* lower libver bound */
   TEST_FOR (ifmt = 0, ifmt <= 1, ++ifmt);
-  if(config.restart == 1 && ckpt_flg == 1)  imblk = ckpt.ifmt;
+  if(config.restart == 1 && ckpt_flg == 1)  ifmt = ckpt.ifmt;
   strncpy(config.libver_bound_low, fmt_low[ifmt],
           sizeof(config.libver_bound_low));
   assert(set_libver_bounds(&config, rank, fapl) >= 0);
