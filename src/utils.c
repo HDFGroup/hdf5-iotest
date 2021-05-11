@@ -277,7 +277,6 @@ void restart(
         ckpt->imod = 1;
       }
 
-      int init_size = strlen(last_line);
       char delim[] = ",";
       char *ptr = strtok(last_line,delim);
       

@@ -136,5 +136,7 @@ int validate(configuration* pconfig, const int size)
          strncmp(pconfig->single_process, "core", 16) == 0  ||
          strncmp(pconfig->single_process, "mpi-io-uni", 16) == 0);
 
+  assert(pconfig->restart == 0 || pconfig->restart == 1);
+
   return 0;
 }

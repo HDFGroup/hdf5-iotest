@@ -292,6 +292,10 @@ The following configuration parameters are supported.
  csv-file = hdf5_iotest.csv
     #+end_src
 
+- Restart :: The simulations will resume from (and including) the last successful
+             entry in the result's CSV file. A value of 1 indicates a restart run,
+             and 0 is no restart.
+
 * Internal Parameters<<sec:internal-parameters>>
 
 Currently, the I/O test varies the following parameters:

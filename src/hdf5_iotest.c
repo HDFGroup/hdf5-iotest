@@ -27,7 +27,6 @@
 #define  END_TEST }
 
 #define CONFIG_FILE "hdf5_iotest.ini"
-#define RESTART_FILE "hdf5_iotest.chckpt"
 
 int main(int argc, char* argv[])
 {
