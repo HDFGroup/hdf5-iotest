@@ -294,7 +294,12 @@ The following configuration parameters are supported.
 
 - Restart :: The simulations will resume from (and including) the last successful
              entry in the result's CSV file. A value of 1 indicates a restart run,
-             and 0 is no restart.
+             and 0 is no restart. If the keyword is not present, the default is 
+             not a restart.
+    #+begin_src conf-unix :noweb-ref hdf5-iotest-conf
+    # [0, 1]
+    restart = 1
+    #+end_src
 
 * Internal Parameters<<sec:internal-parameters>>
 
