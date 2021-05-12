@@ -2,14 +2,6 @@ name: hdf5-iotest
 
 # Controls when the action will run. 
 #Triggers the workflow on push or pull requests.
-#on: 
-#  push:
-#    branches: [ master ]
-#  pull_request:
-#    branches: [ master ]
-#on: 
-#  push:
-#  pull_request:
 on: 
   push:
     branches: [ master ]
@@ -17,7 +9,7 @@ on:
     branches: [ master ]
 
 # A workflow run is made up of one or more jobs that
-# can run sequentially or in parallel 
+# can run sequentially or in parallel
 jobs:
   # This workflow contains a single job called "build"
   build:
@@ -55,6 +47,7 @@ jobs:
 
     - name: configure hdf5-iotest
       run: |
+        ./autogen.sh
         mkdir build; cd build
         ../configure --prefix=$GITHUB_WORKSPACE/build
       shell: bash
