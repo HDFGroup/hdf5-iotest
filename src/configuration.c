@@ -73,6 +73,8 @@ int check_options
     strncpy(pconfig->hdf5_file, value, PATH_MAX-1);
   } else if (MATCH(section, "csv-file")) {
     strncpy(pconfig->csv_file, value, PATH_MAX-1);
+  } else if (MATCH(section, "restart")) {
+    pconfig->restart = (unsigned int) atol(value);
   } else {
     return 0;  /* unknown name, error */
   }
@@ -133,6 +135,8 @@ int validate(configuration* pconfig, const int size)
   assert(strncmp(pconfig->single_process, "posix", 16) == 0 ||
          strncmp(pconfig->single_process, "core", 16) == 0  ||
          strncmp(pconfig->single_process, "mpi-io-uni", 16) == 0);
+
+  assert(pconfig->restart == 0 || pconfig->restart == 1);
 
   return 0;
 }
