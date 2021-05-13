@@ -13,6 +13,7 @@
 
 #include "utils.h"
 
+#include <stdlib.h>
 #include <assert.h>
 #include <string.h>
 
@@ -224,4 +225,100 @@ herr_t set_libver_bounds(configuration* pconfig, int rank, hid_t fapl)
   assert((result = H5Pset_libver_bounds(fapl, low, high)) >= 0);
 
   return result;
+}
+
+/*
+ *
+ * Restart from last fully completed configuration
+ *
+ */
+
+void restart(
+             restart_t *ckpt, 
+             const char* fname,
+             char* slow_dim[],
+             char* fill[],
+             char* layout[],
+             char* fmt_low[],
+             char* mpi_mod[],
+             hsize_t mblk_size[],
+             hsize_t align_incr[]
+)
+{
+  FILE *fptr;                         /* File pointer */
+  static const long max_len = 200+ 1; /* define the max length of the line to read */
+  char buf[max_len + 1];              /* define the buffer and allocate the length */
+
+  if ((fptr = fopen(fname, "rb")) != NULL)
+    {
+      fseek(fptr, -max_len, SEEK_END); /* set pointer to the end of file minus a length. There can be more than one new line character */
+      fread(buf, max_len-1, 1, fptr);  /* read the contents of the file from the fseek() position */
+      fclose(fptr);                    /* close the file */
+      
+      buf[max_len-1] = '\0';           /* reset the string */
+      char *last_newline = strrchr(buf, '\n'); /* find last occurrence of newline */
+      char *last_line = last_newline+1;        /* jump to it */
+      
+      printf("RESTARTING FROM LAST LINE: [%s]\n", last_line);
+
+      if( strstr(last_line, slow_dim[1]) != NULL) {
+        ckpt->islow = 1;
+      } else {
+        ckpt->islow = 0;
+      } 
+      if( strstr(last_line, layout[1]) != NULL) {
+        ckpt->ilay = 1;
+      } else {
+        ckpt->ilay = 0;
+      } 
+      if( strstr(last_line, fill[1]) != NULL) {
+        ckpt->ifill = 1;
+      } else {
+        ckpt->ifill = 0;
+      } 
+      if( strstr(last_line, fmt_low[1]) != NULL) {
+        ckpt->ifmt = 1;
+      } else {
+        ckpt->ifmt = 0;
+      } 
+      if( strstr(last_line, mpi_mod[1]) != NULL) {
+        ckpt->imod = 1;
+      } else {
+        ckpt->imod = 0;
+      }
+
+      char delim[] = ",";
+      char *ptr = strtok(last_line,delim);
+      
+      int icnt = 0;
+      while(ptr != NULL)
+        {
+          if(icnt == 8) {
+            ckpt->irank = atoi(ptr);
+          } else if(icnt == 10) {
+            if( (hsize_t)atoi(ptr) != align_incr[0]) {
+              ckpt->ialig = 1;
+            } else {
+              ckpt->ialig = 0;
+            }
+          } else if(icnt == 12) {
+            if( (hsize_t)atoi(ptr) == mblk_size[0] ) {
+              ckpt->imblk = 0;
+            } else {
+              ckpt->imblk = 1;
+            }
+          }
+          icnt++;
+          ptr = strtok(NULL, delim);
+        }
+    }
+
+  /* Repeating the last successful configuration,
+     so remove the last line to avoid duplicate lines */
+  int len = strlen(fname);
+  char command[ len + 12];
+  strcpy(command, "sed -i '$d' ");
+  strcat(command, fname);
+  system(command);
+  
 }
