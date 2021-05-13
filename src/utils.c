@@ -263,18 +263,28 @@ void restart(
 
       if( strstr(last_line, slow_dim[1]) != NULL) {
         ckpt->islow = 1;
+      } else {
+        ckpt->islow = 0;
       } 
       if( strstr(last_line, layout[1]) != NULL) {
         ckpt->ilay = 1;
+      } else {
+        ckpt->ilay = 0;
       } 
       if( strstr(last_line, fill[1]) != NULL) {
         ckpt->ifill = 1;
+      } else {
+        ckpt->ifill = 0;
       } 
       if( strstr(last_line, fmt_low[1]) != NULL) {
         ckpt->ifmt = 1;
+      } else {
+        ckpt->ifmt = 0;
       } 
       if( strstr(last_line, mpi_mod[1]) != NULL) {
         ckpt->imod = 1;
+      } else {
+        ckpt->imod = 0;
       }
 
       char delim[] = ",";
@@ -286,11 +296,17 @@ void restart(
           if(icnt == 8) {
             ckpt->irank = atoi(ptr);
           } else if(icnt == 10) {
-            if( (hsize_t)atoi(ptr) != align_incr[0])
+            if( (hsize_t)atoi(ptr) != align_incr[0]) {
               ckpt->ialig = 1;
+            } else {
+              ckpt->ialig = 0;
+            }
           } else if(icnt == 12) {
-            if( (hsize_t)atoi(ptr) == mblk_size[0] )
+            if( (hsize_t)atoi(ptr) == mblk_size[0] ) {
               ckpt->imblk = 0;
+            } else {
+              ckpt->imblk = 1;
+            }
           }
           icnt++;
           ptr = strtok(NULL, delim);
