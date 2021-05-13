@@ -45,6 +45,7 @@ typedef struct
   char          mpi_io[16];
   char          hdf5_file[PATH_MAX+1];
   char          csv_file[PATH_MAX+1];
+  unsigned int  restart;      
 } configuration;
 
 extern int handler(void* user,
