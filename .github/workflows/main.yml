@@ -55,7 +55,7 @@ jobs:
       shell: bash
 
 ##################################
-# TEST HDF5-iotest
+# BUILD HDF5-iotest
 ##################################
 
     - name: test hdf5-iotest
