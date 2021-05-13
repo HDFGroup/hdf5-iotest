@@ -32,8 +32,8 @@ jobs:
     - name: Install Dependencies (Linux)
       if: matrix.os == 'ubuntu-latest'
       run: |
-        sudo apt-get install -qq openmpi
-        sudo apt-get install -qq libhdf5-mpi-dev
+        sudo apt-get install -qq mpich
+        sudo apt-get install -qq libhdf5-mpich-dev
         # Set env vars
         echo "CC=mpicc" >> $GITHUB_ENV
 #       echo "CPPFLAGS=-I/usr/include/hdf5/openmpi" >> $GITHUB_ENV
