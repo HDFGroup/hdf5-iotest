@@ -36,7 +36,7 @@ jobs:
         sudo apt-get install -qq libhdf5-mpi-dev
         # Set env vars
         echo "CC=mpicc" >> $GITHUB_ENV
-        echo "CPPFLAGS=-I/usr/include/hdf5/mpich" >> $GITHUB_ENV
+#       echo "CPPFLAGS=-I/usr/include/hdf5/mpich" >> $GITHUB_ENV
 
  # Checks-out the repository under $GITHUB_WORKSPACE so the job can access it.
     - name: Get Sources
@@ -48,6 +48,7 @@ jobs:
 
     - name: configure hdf5-iotest
       run: |
+        find /usr/include -iname "hdf5.h"
         ./autogen.sh
         mkdir build; cd build
         ../configure --prefix=$GITHUB_WORKSPACE/build
