@@ -49,7 +49,6 @@ jobs:
 
     - name: configure hdf5-iotest
       run: |
-        find /usr/ -iname "libhdf5*"
         ./autogen.sh
         mkdir build; cd build
         ../configure --prefix=$GITHUB_WORKSPACE/build
