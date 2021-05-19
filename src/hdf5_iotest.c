@@ -251,7 +251,6 @@ int main(int argc, char* argv[])
 
       coll_mpi_io_flg = (strncmp(config.mpi_io, "collective", 15) == 0);
 
-      //  coll_mpi_io_flg = 0;
       if (coll_mpi_io_flg)
         assert(H5Pset_dxpl_mpio(dxpl, H5FD_MPIO_COLLECTIVE) >= 0);
       else
@@ -299,9 +298,7 @@ int main(int argc, char* argv[])
             fapl, dapl, dxpl,
             &create_time, &read_time);
   read_phase += MPI_Wtime();
-
   MPI_Barrier(MPI_COMM_WORLD);
-
   wall_time += MPI_Wtime();
 
   get_timings(write_phase, create_time, write_time, read_phase, read_time, &ts);
