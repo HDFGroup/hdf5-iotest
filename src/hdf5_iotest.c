@@ -283,6 +283,7 @@ int main(int argc, char* argv[])
     print_current_config(&config);
 
   MPI_Barrier(MPI_COMM_WORLD);
+
   wall_time = -MPI_Wtime();
   read_time = write_time = create_time = 0.0;
 
@@ -293,12 +294,16 @@ int main(int argc, char* argv[])
   write_phase += MPI_Wtime();
 
   MPI_Barrier(MPI_COMM_WORLD);
+
   read_phase = -MPI_Wtime();
   read_test(&config, size, rank, my_proc_row, my_proc_col, my_rows, my_cols,
             fapl, dapl, dxpl,
             &create_time, &read_time);
+
   read_phase += MPI_Wtime();
+
   MPI_Barrier(MPI_COMM_WORLD);
+
   wall_time += MPI_Wtime();
 
   get_timings(write_phase, create_time, write_time, read_phase, read_time, &ts);
