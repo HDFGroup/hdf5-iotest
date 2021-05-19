@@ -59,7 +59,7 @@ void print_results
       char digits[18];
       strcpy(command, "du --apparent-size -cb ");
       strcat(command, pconfig->hdf5_file);
-      strcat(command, "* | tail -1 | sed 's/[^0-9]//g'");
+      strcat(command, "*.h5 | tail -1 | sed 's/[^0-9]//g'");
 
       if (0 == (fpipe = (FILE*)popen(command, "r")))
         {
