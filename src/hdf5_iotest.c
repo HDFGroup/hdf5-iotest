@@ -51,7 +51,7 @@ int main(int argc, char* argv[])
   char* fmt_low[2]       = { "earliest", "latest" };
   char* mpi_mod[2]       = { "independent", "collective" };
 
-  hid_t fcpl, fapl, dapl, dxpl, lcpl;
+  hid_t fcpl, fapl, dapl, dxpl, lcpl, fapl_cpy, fapl_split;
 
   double wall_time, create_time, write_phase, write_time, read_phase, read_time;
   timings ts;
@@ -70,6 +70,7 @@ int main(int argc, char* argv[])
       config.hdf5_file[0] = '\0';
       config.csv_file[0] = '\0';
       config.restart = 0;
+      config.split = 0;
 
       if (ini_parse(ini, handler, &config) < 0)
         {
@@ -240,10 +241,17 @@ int main(int argc, char* argv[])
     imod = ckpt.imod;
     ckpt_flg = 0;
   }
+
   if (size > 1)
     {
-      strncpy(config.mpi_io, mpi_mod[imod], sizeof(config.mpi_io)-1);
+      if(config.split == 0 )
+        strncpy(config.mpi_io, mpi_mod[imod], sizeof(config.mpi_io)-1);
+      else /* split driver can't do collective I/O */
+        strncpy(config.mpi_io, mpi_mod[0], sizeof(config.mpi_io)-1);
+
       coll_mpi_io_flg = (strncmp(config.mpi_io, "collective", 15) == 0);
+
+      //  coll_mpi_io_flg = 0;
       if (coll_mpi_io_flg)
         assert(H5Pset_dxpl_mpio(dxpl, H5FD_MPIO_COLLECTIVE) >= 0);
       else
@@ -256,6 +264,18 @@ int main(int argc, char* argv[])
         continue;
     }
 
+  /* Set the split file driver if requested.
+   * This needs to be done here so that the metadata and raw data fapl's
+   * parameters are completely set because some fapl APIs, like alignment,
+   * can't be applied to the split driver's fapl */
+  if(config.split == 1 ) 
+    {
+      assert((fapl_split = H5Pcreate(H5P_FILE_ACCESS)) >= 0);
+      assert(H5Pset_fapl_split(fapl_split, "-m.h5", fapl, "-r.h5", fapl) >= 0);
+      fapl_cpy = fapl;
+      fapl = fapl_split;
+    }
+
   /* ######################################################################## */
 
   validate(&config, size);
@@ -264,7 +284,6 @@ int main(int argc, char* argv[])
     print_current_config(&config);
 
   MPI_Barrier(MPI_COMM_WORLD);
-
   wall_time = -MPI_Wtime();
   read_time = write_time = create_time = 0.0;
 
@@ -275,7 +294,6 @@ int main(int argc, char* argv[])
   write_phase += MPI_Wtime();
 
   MPI_Barrier(MPI_COMM_WORLD);
-
   read_phase = -MPI_Wtime();
   read_test(&config, size, rank, my_proc_row, my_proc_col, my_rows, my_cols,
             fapl, dapl, dxpl,
@@ -290,6 +308,12 @@ int main(int argc, char* argv[])
 
   if (rank == 0)
     print_results(&config, wall_time, &ts);
+
+  if (config.split == 1) 
+    {
+      assert(H5Pclose(fapl) >= 0); /* close the split driver fapl */
+      fapl = fapl_cpy;
+    }
 
   /* ######################################################################## */
 

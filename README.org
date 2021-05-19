@@ -301,6 +301,13 @@ The following configuration parameters are supported.
     restart = 1
     #+end_src
 
+- Split :: The split I/O driver will be used [1]. Zero indicates to not use
+    the split file diriver, default.
+    #+begin_src conf-unix :noweb-ref hdf5-iotest-conf
+    # [0, 1]
+    split = 1
+    #+end_src
+
 * Internal Parameters<<sec:internal-parameters>>
 
 Currently, the I/O test varies the following parameters:
