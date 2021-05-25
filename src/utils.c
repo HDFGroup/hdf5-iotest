@@ -50,9 +50,38 @@ void print_results
   assert(H5get_libversion(&majnum, &minnum, &relnum) >= 0);
   snprintf(version, 16, "\"%d.%d.%d\"", majnum, minnum, relnum);
 
-  assert((file = H5Fopen(pconfig->hdf5_file, H5F_ACC_RDONLY, H5P_DEFAULT)) >= 0);
-  assert(H5Fget_filesize(file, &fsize) >= 0);
-  assert(H5Fclose(file) >= 0);
+  if( pconfig->split == 1) 
+    {
+      /* H5Fget_filesize does not work with split FD */
+      char command[ PATH_MAX + 80 ];
+      FILE *fpipe;
+      char digit = 0;
+      char digits[18];
+      strcpy(command, "du --apparent-size -cb ");
+      strcat(command, pconfig->hdf5_file);
+      strcat(command, "*.h5 | tail -1 | sed 's/[^0-9]//g'");
+
+      if (0 == (fpipe = (FILE*)popen(command, "r")))
+        {
+          perror("popen() failed.");
+          exit(EXIT_FAILURE);
+        }
+      int i = 0;
+      while (fread(&digit, sizeof(digit), 1, fpipe))
+        {
+          digits[i] = digit;
+          i++;
+        }
+      pclose(fpipe);
+      fsize = atoi(digits);
+
+    } 
+  else 
+    {
+      assert((file = H5Fopen(pconfig->hdf5_file, H5F_ACC_RDONLY, H5P_DEFAULT)) >= 0);
+      assert(H5Fget_filesize(file, &fsize) >= 0);
+      assert(H5Fclose(file) >= 0);
+    }
 
   /* write summary to the console */
   printf("Wall clock  [s]:\t\t%.2f\n", wall_time);

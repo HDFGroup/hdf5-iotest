@@ -69,6 +69,8 @@ int check_options
     strncpy(pconfig->single_process, value, 15);
   } else if (MATCH(section, "mpi-io")) {
     strncpy(pconfig->mpi_io, value, 15);
+  } else if (MATCH(section, "split")) {
+    pconfig->split = (unsigned int) atol(value);
   } else if (MATCH(section, "hdf5-file")) {
     strncpy(pconfig->hdf5_file, value, PATH_MAX-1);
   } else if (MATCH(section, "csv-file")) {
@@ -137,6 +139,7 @@ int validate(configuration* pconfig, const int size)
          strncmp(pconfig->single_process, "mpi-io-uni", 16) == 0);
 
   assert(pconfig->restart == 0 || pconfig->restart == 1);
+  assert(pconfig->split == 0 || pconfig->split == 1);
 
   return 0;
 }
