@@ -77,6 +77,8 @@ int check_options
     strncpy(pconfig->csv_file, value, PATH_MAX-1);
   } else if (MATCH(section, "restart")) {
     pconfig->restart = (unsigned int) atol(value);
+  } else if (MATCH(section, "one-case")) {
+    pconfig->one_case = (unsigned int) atol(value);
   } else {
     return 0;  /* unknown name, error */
   }
@@ -140,6 +142,7 @@ int validate(configuration* pconfig, const int size)
 
   assert(pconfig->restart == 0 || pconfig->restart == 1);
   assert(pconfig->split == 0 || pconfig->split == 1);
+  assert(pconfig->one_case >= 0);
 
   return 0;
 }
