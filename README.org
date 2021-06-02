@@ -308,6 +308,17 @@ The following configuration parameters are supported.
     split = 1
     #+end_src
 
+- One-case :: The simulation will run only one case in the parameter space.
+    A value not equal to 0 indicates which parameter case to run, and the
+    value is a cumulative counter of the nested loops over the parameter space.
+    For example, to rerun the 100th case in the CSV file, the value would be 100.
+    If the keyword is not present, the default is to do all the cases.
+
+    #+begin_src conf-unix :noweb-ref hdf5-iotest-conf
+    # case number in the parameter space to run.
+    one-case = 100
+    #+end_src
+
 * Internal Parameters<<sec:internal-parameters>>
 
 Currently, the I/O test varies the following parameters:

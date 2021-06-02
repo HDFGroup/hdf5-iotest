@@ -55,6 +55,7 @@ int main(int argc, char* argv[])
 
   double wall_time, create_time, write_phase, write_time, read_phase, read_time;
   timings ts;
+  int icase = 0;
 
 
   MPI_Init(&argc, &argv);
@@ -73,6 +74,7 @@ int main(int argc, char* argv[])
       config.csv_file[0] = '\0';
       config.restart = 0;
       config.split = 0;
+      config.one_case = 0;
 
       if (ini_parse(ini, handler, &config) < 0)
         {
@@ -239,6 +241,8 @@ int main(int argc, char* argv[])
   /* ======================================================================== */
   /* MPI-IO mode */
   TEST_FOR (imod = 0, imod <= 1, ++imod);
+  ++icase;
+  if(config.one_case > 0 && config.one_case != icase) goto skip;
   if(config.restart == 1 && ckpt_flg == 1) {
     imod = ckpt.imod;
     ckpt_flg = 0;
@@ -318,6 +322,9 @@ int main(int argc, char* argv[])
       assert(H5Pclose(fapl) >= 0); /* close the split driver fapl */
       fapl = fapl_cpy;
     }
+  if(config.one_case > 0) goto exitloop;
+ skip:
+  continue;
 
   /* ######################################################################## */
 
@@ -329,6 +336,8 @@ int main(int argc, char* argv[])
   END_TEST /* layout */
   END_TEST /* slow dim. */
   END_TEST /* rank */
+
+ exitloop:
 
   assert(H5Pclose(lcpl) >= 0);
   assert(H5Pclose(dxpl) >= 0);
