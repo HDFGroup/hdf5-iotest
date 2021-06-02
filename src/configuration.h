@@ -47,6 +47,7 @@ typedef struct
   char          csv_file[PATH_MAX+1];
   unsigned int  restart;
   unsigned int  split;
+  unsigned int  one_case;
 } configuration;
 
 extern int handler(void* user,
