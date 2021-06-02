@@ -23,6 +23,7 @@
 void read_test
 (
  configuration* pconfig,
+ char * hdf5_filename,
  int size,
  int rank,
  int my_proc_row,
@@ -81,8 +82,7 @@ void read_test
   printf("\nWARNING: Data verification enabled. Timings will be distorted!!!\n");
 #endif
 
-
-  assert((file = H5Fopen(pconfig->hdf5_file, H5F_ACC_RDONLY, fapl)) >= 0);
+  assert((file = H5Fopen(hdf5_filename, H5F_ACC_RDONLY, fapl)) >= 0);
 
   switch (pconfig->rank)
     {

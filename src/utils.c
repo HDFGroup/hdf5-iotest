@@ -38,6 +38,7 @@ void create_output_file(const char* fname)
 void print_results
 (
  configuration* pconfig,
+ char*          hdf5_filename,
  double         wall_time,
  timings*       pts
  )
@@ -58,7 +59,7 @@ void print_results
       char digit = 0;
       char digits[18];
       strcpy(command, "du --apparent-size -cb ");
-      strcat(command, pconfig->hdf5_file);
+      strcat(command, hdf5_filename);
       strcat(command, "*.h5 | tail -1 | sed 's/[^0-9]//g'");
 
       if (0 == (fpipe = (FILE*)popen(command, "r")))
@@ -78,7 +79,7 @@ void print_results
     } 
   else 
     {
-      assert((file = H5Fopen(pconfig->hdf5_file, H5F_ACC_RDONLY, H5P_DEFAULT)) >= 0);
+      assert((file = H5Fopen(hdf5_filename, H5F_ACC_RDONLY, H5P_DEFAULT)) >= 0);
       assert(H5Fget_filesize(file, &fsize) >= 0);
       assert(H5Fclose(file) >= 0);
     }

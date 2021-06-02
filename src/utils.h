@@ -62,7 +62,8 @@ void get_timings
 
 void print_results
 (
- configuration* pconfig,
+ configuration* pconfig, 
+ char*          hdf5_filename,
  double         wall_time,
  timings*       pts
  );

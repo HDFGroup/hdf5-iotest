@@ -23,6 +23,7 @@
 void write_test
 (
  configuration* pconfig,
+ char * hdf5_filename,
  int size,
  int rank,
  int my_proc_row,
@@ -88,7 +89,7 @@ void write_test
 #endif
 
   *create_time -= MPI_Wtime();
-  assert((file = H5Fcreate(pconfig->hdf5_file, H5F_ACC_TRUNC, fcpl, fapl))
+  assert((file = H5Fcreate(hdf5_filename, H5F_ACC_TRUNC, fcpl, fapl))
          >= 0);
   *create_time += MPI_Wtime();
 

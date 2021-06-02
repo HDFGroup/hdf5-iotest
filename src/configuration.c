@@ -73,6 +73,11 @@ int check_options
     pconfig->split = (unsigned int) atol(value);
   } else if (MATCH(section, "hdf5-file")) {
     strncpy(pconfig->hdf5_file, value, PATH_MAX-1);
+    /* Enable individual output HDF5 files per case, denoted by a "#" in the filename */
+    if(strstr(pconfig->hdf5_file, "#") != NULL)
+      {
+        pconfig->HDF5perCase = 1;
+      }
   } else if (MATCH(section, "csv-file")) {
     strncpy(pconfig->csv_file, value, PATH_MAX-1);
   } else if (MATCH(section, "restart")) {
