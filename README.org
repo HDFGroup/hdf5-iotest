@@ -316,7 +316,7 @@ The following configuration parameters are supported.
 
     #+begin_src conf-unix :noweb-ref hdf5-iotest-conf
     # case number in the parameter space to run.
-    restart = 100
+    one-case = 100
     #+end_src
 
 * Internal Parameters<<sec:internal-parameters>>
