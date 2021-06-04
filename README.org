@@ -280,6 +280,8 @@ The following configuration parameters are supported.
 
 - HDF5 Output File Name :: The default HDF5 output file name is
      =hdf5_iotest.h5=. Use this parameter to select a different name.
+     **Note**: The character "#" in the filename is reserved for creating an HDF5 
+     with the "#" replaced with the accumulated case number, for example *hdf5_iotest.#.h5*.
     #+begin_src conf-unix :noweb-ref hdf5-iotest-conf
  hdf5-file = hdf5_iotest.h5
     #+end_src

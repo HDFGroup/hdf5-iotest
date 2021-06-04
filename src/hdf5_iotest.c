@@ -21,6 +21,7 @@
 
 #include <assert.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 
 #define  TEST_FOR(INI, CHK, CNT) for ((INI); (CHK); (CNT)) {
@@ -75,6 +76,7 @@ int main(int argc, char* argv[])
       config.restart = 0;
       config.split = 0;
       config.one_case = 0;
+      config.HDF5perCase = 0;
 
       if (ini_parse(ini, handler, &config) < 0)
         {
@@ -148,6 +150,8 @@ int main(int argc, char* argv[])
       assert(H5Pset_fapl_core(fapl, 67108864, 1) >= 0); /* 64 MB increments */
     else
       assert(H5Pset_fapl_sec2(fapl) >= 0);
+
+  char hdf5_filename[strlen(config.hdf5_file+4)];
 
   /* use a macro to stop the indentation madness */
 
@@ -242,6 +246,7 @@ int main(int argc, char* argv[])
   /* MPI-IO mode */
   TEST_FOR (imod = 0, imod <= 1, ++imod);
   ++icase;
+  
   if(config.one_case > 0 && config.one_case != icase) goto skip;
   if(config.restart == 1 && ckpt_flg == 1) {
     imod = ckpt.imod;
@@ -288,13 +293,26 @@ int main(int argc, char* argv[])
   if (rank == 0)
     print_current_config(&config);
 
+  strcpy( hdf5_filename, config.hdf5_file);
+
+  if(config.HDF5perCase != 0)
+    {
+      char buf[5];
+      sprintf(buf, "%04d", icase);
+
+      char * num;
+      num = strstr (hdf5_filename,"#");
+      strcpy (num+4, num+1);
+      strncpy (num,buf,4);
+    }
+
   MPI_Barrier(MPI_COMM_WORLD);
 
   wall_time = -MPI_Wtime();
   read_time = write_time = create_time = 0.0;
 
   write_phase = -MPI_Wtime();
-  write_test(&config, size, rank, my_proc_row, my_proc_col, my_rows, my_cols,
+  write_test(&config, hdf5_filename, size, rank, my_proc_row, my_proc_col, my_rows, my_cols,
              fcpl, fapl, lcpl, dapl, dxpl,
              &create_time, &write_time);
   write_phase += MPI_Wtime();
@@ -302,7 +320,7 @@ int main(int argc, char* argv[])
   MPI_Barrier(MPI_COMM_WORLD);
 
   read_phase = -MPI_Wtime();
-  read_test(&config, size, rank, my_proc_row, my_proc_col, my_rows, my_cols,
+  read_test(&config, hdf5_filename, size, rank, my_proc_row, my_proc_col, my_rows, my_cols,
             fapl, dapl, dxpl,
             &create_time, &read_time);
 
@@ -315,13 +333,24 @@ int main(int argc, char* argv[])
   get_timings(write_phase, create_time, write_time, read_phase, read_time, &ts);
 
   if (rank == 0)
-    print_results(&config, wall_time, &ts);
-
+    print_results(&config, hdf5_filename, wall_time, &ts);
+  
   if (config.split == 1) 
     {
       assert(H5Pclose(fapl) >= 0); /* close the split driver fapl */
       fapl = fapl_cpy;
     }
+
+  /* clean up the hdf5 files for the case of an HDF5 file per case */
+  if(config.HDF5perCase != 0 && rank == 0) {
+    int len = strlen(hdf5_filename) + 8;
+    char* command = malloc( len );
+    strcpy( command, "rm -f " );
+    strcat( command,  hdf5_filename);
+    system(command);
+    free(command);
+  }
+  
   if(config.one_case > 0) goto exitloop;
  skip:
   continue;

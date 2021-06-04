@@ -48,6 +48,7 @@ typedef struct
   unsigned int  restart;
   unsigned int  split;
   unsigned int  one_case;
+  unsigned int  HDF5perCase;
 } configuration;
 
 extern int handler(void* user,

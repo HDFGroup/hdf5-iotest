@@ -20,6 +20,7 @@
 extern void read_test
 (
  configuration* pconfig,
+ char * hdf5_filename,
  int size,
  int rank,
  int my_proc_row,
