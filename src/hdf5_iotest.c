@@ -62,6 +62,8 @@ int main(int argc, char* argv[])
   MPI_Comm_size(MPI_COMM_WORLD, &size);
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
+  /* Turn off buffering of stdout */
+  setbuf(stdout, NULL);
 
   if (rank == 0) /* rank 0 reads and checks the config. file */
     {
