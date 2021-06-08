@@ -89,7 +89,6 @@ void write_test
   /* add varability to data when compression is enabled */
   if (strncmp(pconfig->compress_type, "", 16) != 1) {
     float deltax, deltay;
-    int cni, cnj;   /* Points in this task */
     float x, y;
     size_t ii;
     size_t j;
@@ -99,8 +98,6 @@ void write_test
     deltax = 1.f/( pconfig->rows-1);
     deltay = 1.f/( pconfig->cols-1);
 
-    cni = pconfig->rows;
-    cnj = pconfig->cols;
 #ifdef PLOT
     FILE *fp;
     fp = fopen("data.txt", "w+");
@@ -110,7 +107,7 @@ void write_test
     for(j = 0, ii = 0; j < (size_t)my_cols; j++) {
       x = deltax;
       for(i = 0; i < (size_t)my_rows; i++, ii++) {
-        wbuf[ii] = (x-x0)*(x-x0) + (y-y0)*(y-y0); 
+        wbuf[ii] = (x-x0)*(x-x0) + (y-y0)*(y-y0);
 #ifdef PLOT
         fprintf(fp, "%f ", wbuf[ii]);
 #endif
