@@ -98,31 +98,15 @@ void write_test
     deltax = 1.f/( pconfig->rows-1);
     deltay = 1.f/( pconfig->cols-1);
 
-#ifdef PLOT
-    FILE *fp;
-    fp = fopen("data.txt", "w+");
-#endif
-
     y = deltay;
     for(j = 0, ii = 0; j < (size_t)my_cols; j++) {
       x = deltax;
       for(i = 0; i < (size_t)my_rows; i++, ii++) {
         wbuf[ii] = (x-x0)*(x-x0) + (y-y0)*(y-y0);
-#ifdef PLOT
-        fprintf(fp, "%f ", wbuf[ii]);
-#endif
         x += deltax;
       }
-#ifdef PLOT
-      fprintf(fp, "\n");
-#endif
       y += deltay;
     }
-#ifdef PLOT
-    fclose(fp);
-#endif
-
-
   } else {
     for (i = 0; i < (size_t)my_rows*my_cols; ++i)
       wbuf[i] = (double) (my_proc_row + my_proc_col);
