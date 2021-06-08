@@ -35,6 +35,7 @@ void write_test
  hid_t lcpl,
  hid_t dapl,
  hid_t dxpl,
+ unsigned int coll_mpi_io_flg,
  double* create_time,
  double* write_time
  )
@@ -84,8 +85,51 @@ void write_test
 
   printf("\nWARNING: Data verification enabled. Timings will be distorted!!!\n");
 #else
-  for (i = 0; i < (size_t)my_rows*my_cols; ++i)
-    wbuf[i] = (double) (my_proc_row + my_proc_col);
+
+  /* add varability to data when compression is enabled */
+  if (strncmp(pconfig->compress_type, "", 16) != 1) {
+    float deltax, deltay;
+    int cni, cnj;   /* Points in this task */
+    float x, y;
+    size_t ii;
+    size_t j;
+    float x0 = 0.5f;
+    float y0 = 0.5f;
+
+    deltax = 1.f/( pconfig->rows-1);
+    deltay = 1.f/( pconfig->cols-1);
+
+    cni = pconfig->rows;
+    cnj = pconfig->cols;
+#ifdef PLOT
+    FILE *fp;
+    fp = fopen("data.txt", "w+");
+#endif
+
+    y = deltay;
+    for(j = 0, ii = 0; j < (size_t)my_cols; j++) {
+      x = deltax;
+      for(i = 0; i < (size_t)my_rows; i++, ii++) {
+        wbuf[ii] = (x-x0)*(x-x0) + (y-y0)*(y-y0); 
+#ifdef PLOT
+        fprintf(fp, "%f ", wbuf[ii]);
+#endif
+        x += deltax;
+      }
+#ifdef PLOT
+      fprintf(fp, "\n");
+#endif
+      y += deltay;
+    }
+#ifdef PLOT
+    fclose(fp);
+#endif
+
+
+  } else {
+    for (i = 0; i < (size_t)my_rows*my_cols; ++i)
+      wbuf[i] = (double) (my_proc_row + my_proc_col);
+  }
 #endif
 
   *create_time -= MPI_Wtime();
@@ -99,7 +143,7 @@ void write_test
       {
         /* a single 4D array */
         *create_time -= MPI_Wtime();
-        assert((dset = create_dataset(pconfig, file, "dataset", lcpl, dapl))
+        assert((dset = create_dataset(pconfig, file, "dataset", lcpl, dapl, coll_mpi_io_flg))
                >= 0);
         *create_time += MPI_Wtime();
 
@@ -139,7 +183,7 @@ void write_test
               {
                 *create_time -= MPI_Wtime();
                 sprintf(path, "step=%d", istep);
-                assert((dset = create_dataset(pconfig, file, path, lcpl, dapl))
+                assert((dset = create_dataset(pconfig, file, path, lcpl, dapl, coll_mpi_io_flg))
                        >= 0);
                 *create_time += MPI_Wtime();
 
@@ -178,7 +222,7 @@ void write_test
                       assert((dset = H5Dopen(file, path, dapl)) >= 0);
                     else
                       assert((dset = create_dataset(pconfig, file, path,
-                                                    lcpl, dapl)) >= 0);
+                                                    lcpl, dapl, coll_mpi_io_flg)) >= 0);
                     *create_time += MPI_Wtime();
 
 #ifdef VERIFY_DATA
@@ -216,7 +260,7 @@ void write_test
                         (step_first_flg ? istep : iarray),
                         (step_first_flg ? iarray : istep));
                 assert((dset = create_dataset(pconfig, file, path,
-                                              lcpl, dapl)) >= 0);
+                                              lcpl, dapl, coll_mpi_io_flg)) >= 0);
                 *create_time += MPI_Wtime();
 
 #ifdef VERIFY_DATA

@@ -49,6 +49,8 @@ typedef struct
   unsigned int  split;
   unsigned int  one_case;
   unsigned int  HDF5perCase;
+  char          compress_type[16];
+  unsigned int  compress_par[2];
 } configuration;
 
 extern int handler(void* user,

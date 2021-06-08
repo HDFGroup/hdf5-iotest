@@ -77,6 +77,7 @@ int main(int argc, char* argv[])
       config.split = 0;
       config.one_case = 0;
       config.HDF5perCase = 0;
+      config.compress_type[0] = '\0';
 
       if (ini_parse(ini, handler, &config) < 0)
         {
@@ -269,6 +270,11 @@ int main(int argc, char* argv[])
     }
   else
     {
+      if( strncmp(config.single_process, "mpi-io-uni", 16) == 0 &&
+          strcmp(config.compress_type, "") != 0 ) {
+        assert(H5Pset_dxpl_mpio(dxpl, H5FD_MPIO_COLLECTIVE) >= 0);
+        coll_mpi_io_flg = 1;
+      }
       strncpy(config.mpi_io, config.single_process, sizeof(config.mpi_io));
       if (imod == 1)
         continue;
@@ -313,7 +319,7 @@ int main(int argc, char* argv[])
 
   write_phase = -MPI_Wtime();
   write_test(&config, hdf5_filename, size, rank, my_proc_row, my_proc_col, my_rows, my_cols,
-             fcpl, fapl, lcpl, dapl, dxpl,
+             fcpl, fapl, lcpl, dapl, dxpl, coll_mpi_io_flg,
              &create_time, &write_time);
   write_phase += MPI_Wtime();
 
