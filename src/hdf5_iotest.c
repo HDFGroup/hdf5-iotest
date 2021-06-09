@@ -276,7 +276,7 @@ int main(int argc, char* argv[])
         coll_mpi_io_flg = 1;
       }
       strncpy(config.mpi_io, config.single_process, sizeof(config.mpi_io));
-      if (imod == 1)
+      if (imod == 1 && config.restart == 1 )
         continue;
     }
 

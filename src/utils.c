@@ -102,8 +102,8 @@ void print_results
     FILE *fptr = fopen(pconfig->csv_file, "a");
     assert(fptr != NULL);
     fprintf(fptr, "%d,%d,%ld,%ld,%s,%d,%d,%s,%d,%s,%llu,%llu,%llu,%s,%s,%s,%s,"
-            "%.2f,%.0f,%.2f,%.2f,%.2f,%.2f,"
-            "%.2f,%.2f,%.2f,%.2f,%.2f,%.2f\n",
+            "%.4f,%.0f,%.4f,%.4f,%.4f,%.4f,"
+            "%.4f,%.4f,%.4f,%.4f,%.4f,%.4f\n",
             pconfig->steps, pconfig->arrays, pconfig->rows, pconfig->cols,
             pconfig->scaling, pconfig->proc_rows, pconfig->proc_cols,
             pconfig->slowest_dimension, pconfig->rank, version,
