@@ -84,6 +84,31 @@ int check_options
     pconfig->restart = (unsigned int) atol(value);
   } else if (MATCH(section, "one-case")) {
     pconfig->one_case = (unsigned int) atol(value);
+  } else if (MATCH(section, "gzip")) {
+    strncpy(pconfig->compress_type, "gzip", 15);
+    pconfig->compress_par[0] = (unsigned int) atol(value);
+  } else if (MATCH(section, "szip")) {
+    strncpy(pconfig->compress_type, "szip", 15);
+    char tmp[32];
+    strncpy(tmp, value, 31);
+    char * pch;
+    pch = strtok (tmp, " ,");
+    int icnt = 0;
+    while (pch != NULL) {
+      if(icnt == 0) {
+        if ( strcmp(pch,"H5_SZIP_EC_OPTION_MASK") ) {
+          pconfig->compress_par[icnt] = H5_SZIP_EC_OPTION_MASK;
+        } else if ( strcmp(pch,"H5_SZIP_NN_OPTION_MASK") ) {
+          pconfig->compress_par[icnt] = H5_SZIP_NN_OPTION_MASK;
+        } else {
+          return 0;  /* invalid parameter, error */
+        }
+      } else if(icnt == 1) {
+        pconfig->compress_par[icnt] = (unsigned int) atol(pch);
+      }
+      pch = strtok (NULL, " ,");
+      icnt++;
+    }
   } else {
     return 0;  /* unknown name, error */
   }
@@ -121,6 +146,10 @@ int handler(void* user,
 
 int validate(configuration* pconfig, const int size)
 {
+  htri_t avail;
+  herr_t status;
+  unsigned int filter_info;
+
   assert(pconfig->version == 0);
   assert(pconfig->steps > 0);
   assert(pconfig->arrays > 0);
@@ -148,6 +177,27 @@ int validate(configuration* pconfig, const int size)
   assert(pconfig->restart == 0 || pconfig->restart == 1);
   assert(pconfig->split == 0 || pconfig->split == 1);
   assert(pconfig->one_case >= 0);
+
+  if (strncmp(pconfig->compress_type, "gzip", 16) == 0) {
+    /* check if gzip compression is available */
+    avail = H5Zfilter_avail(H5Z_FILTER_DEFLATE);
+    assert(avail > 0 );
+
+    status = H5Zget_filter_info (H5Z_FILTER_DEFLATE, &filter_info);
+    assert(status >= 0);
+    assert( (filter_info & H5Z_FILTER_CONFIG_ENCODE_ENABLED) ||
+            (filter_info & H5Z_FILTER_CONFIG_DECODE_ENABLED) );
+  } else if (strncmp(pconfig->compress_type, "szip", 16) == 0) {
+    /* check if szip compression is available */
+    avail = H5Zfilter_avail(H5Z_FILTER_SZIP);
+    assert(avail > 0 );
+
+    status = H5Zget_filter_info (H5Z_FILTER_SZIP, &filter_info);
+    assert(status >= 0);
+
+    assert( (filter_info & H5Z_FILTER_CONFIG_ENCODE_ENABLED) ||
+            (filter_info & H5Z_FILTER_CONFIG_DECODE_ENABLED) );
+  }
 
   return 0;
 }

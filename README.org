@@ -280,10 +280,10 @@ The following configuration parameters are supported.
 
 - HDF5 Output File Name :: The default HDF5 output file name is
      =hdf5_iotest.h5=. Use this parameter to select a different name.
-     **Note**: The character "#" in the filename is reserved for creating an HDF5 
+     *Note*: The character "#" in the filename is reserved for creating an HDF5 
      with the "#" replaced with the accumulated case number, for example *hdf5_iotest.#.h5*.
     #+begin_src conf-unix :noweb-ref hdf5-iotest-conf
- hdf5-file = hdf5_iotest.h5
+    hdf5-file = hdf5_iotest.h5
     #+end_src
 
 - Results File :: When running the HDF5 I/O test, certain metrics are printed to
@@ -319,6 +319,17 @@ The following configuration parameters are supported.
     #+begin_src conf-unix :noweb-ref hdf5-iotest-conf
     # case number in the parameter space to run.
     one-case = 100
+    #+end_src
+
+- Compression ::  Specifies the compression filter for chunked datasets and
+    currently supports /gzip/ and /szip/. The value corresponds to
+    parameters in the corresponding HDF5 API. Valid parameters for "/gzip/" is an
+    integer for the /level/ (see H5Pset_deflate). For "/szip/" value is
+    /options_mask/, and /pixels_per_block/ (see H5Pset_szip).
+
+    #+begin_src conf-unix :noweb-ref hdf5-iotest-conf
+    # compression filter (gzip, szip).
+    szip = H5_SZIP_NN_OPTION_MASK, 8
     #+end_src
 
 * Internal Parameters<<sec:internal-parameters>>

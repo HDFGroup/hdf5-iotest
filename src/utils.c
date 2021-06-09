@@ -102,13 +102,14 @@ void print_results
     FILE *fptr = fopen(pconfig->csv_file, "a");
     assert(fptr != NULL);
     fprintf(fptr, "%d,%d,%ld,%ld,%s,%d,%d,%s,%d,%s,%llu,%llu,%llu,%s,%s,%s,%s,"
-            "%.2f,%.0f,%.2f,%.2f,%.2f,%.2f,"
-            "%.2f,%.2f,%.2f,%.2f,%.2f,%.2f\n",
+            "%.4f,%.0f,%.4f,%.4f,%.4f,%.4f,"
+            "%.4f,%.4f,%.4f,%.4f,%.4f,%.4f\n",
             pconfig->steps, pconfig->arrays, pconfig->rows, pconfig->cols,
             pconfig->scaling, pconfig->proc_rows, pconfig->proc_cols,
             pconfig->slowest_dimension, pconfig->rank, version,
-            pconfig->alignment_increment, pconfig->alignment_threshold,
-	    pconfig->meta_block_size,
+            (unsigned long long)pconfig->alignment_increment,
+            (unsigned long long)pconfig->alignment_threshold,
+	    (unsigned long long)pconfig->meta_block_size,
             pconfig->layout, pconfig->fill_values, pconfig->libver_bound_low,
             pconfig->mpi_io, wall_time, (double)fsize,
             pts->min_write_phase, pts->max_write_phase,
@@ -154,8 +155,9 @@ void print_current_config(configuration* pconfig)
          pconfig->slowest_dimension, pconfig->rank,
          strncmp(pconfig->layout, "contiguous", 16) == 0 ? "cont" : "chkd",
          pconfig->fill_values,
-         pconfig->alignment_increment, pconfig->alignment_threshold,
-	 pconfig->meta_block_size,
+         (unsigned long long)pconfig->alignment_increment,
+         (unsigned long long)pconfig->alignment_threshold,
+	 (unsigned long long)pconfig->meta_block_size,
          pconfig->libver_bound_low, io);
 }
 
