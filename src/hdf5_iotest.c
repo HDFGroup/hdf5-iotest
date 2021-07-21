@@ -57,6 +57,7 @@ int main(int argc, char* argv[])
   double wall_time, create_time, write_phase, write_time, read_phase, read_time;
   timings ts;
   int icase = 0;
+  int nmod = 0;
 
 
   MPI_Init(&argc, &argv);
@@ -152,6 +153,9 @@ int main(int argc, char* argv[])
     else
       assert(H5Pset_fapl_sec2(fapl) >= 0);
 
+  /* test collective and independent modes when parallel, and greater than 0 ranks */
+  if (size > 1) nmod = 1;
+
   char hdf5_filename[strlen(config.hdf5_file+4)];
 
   /* use a macro to stop the indentation madness */
@@ -245,7 +249,7 @@ int main(int argc, char* argv[])
 
   /* ======================================================================== */
   /* MPI-IO mode */
-  TEST_FOR (imod = 0, imod <= 1, ++imod);
+  TEST_FOR (imod = 0, imod <= nmod, ++imod);
   ++icase;
   
   if(config.one_case > 0 && config.one_case != icase) goto skip;
