@@ -88,6 +88,7 @@ void read_test
 
 #if H5_VERSION_GE(1,13,0)
   if (pconfig->async.enable == 1) {
+    es    = calloc(1, sizeof(time_step));
     es->es_data      = H5EScreate();
     es->es_meta_data = H5EScreate();
   }
@@ -99,7 +100,7 @@ void read_test
   else
 #endif
     assert((file = H5Fopen(hdf5_filename, H5F_ACC_RDONLY, fapl)) >= 0);
-
+  
   switch (pconfig->rank)
     {
     case 4:
@@ -143,7 +144,7 @@ void read_test
             if (pconfig->async.enable == 1) {
               if (istep != pconfig->steps - 1) { // no sleep after the last es
                 if (rank == 0)
-                  printf("Computing... \n");
+                  printf("Read Computing... \n");
                 async_sleep(file, fapl, pconfig->async);
               }
 
@@ -209,7 +210,7 @@ void read_test
                 if (pconfig->async.enable == 1) {
                   if (istep != pconfig->steps - 1) { // no sleep after the last es
                     if (rank == 0)
-                      printf("Computing... \n");
+                      printf("Read Computing... \n");
                     async_sleep(file, fapl, pconfig->async);
                   }
 
@@ -264,7 +265,7 @@ void read_test
                 if (pconfig->async.enable == 1) {
                   if (istep != pconfig->steps - 1) { // no sleep after the last es
                     if (rank == 0)
-                      printf("Computing... \n");
+                      printf("Read Computing... \n");
                     async_sleep(file, fapl, pconfig->async);
                   }
 
@@ -325,10 +326,11 @@ void read_test
                 verify_read_buffer(rbuf, &my_rows, &my_cols, d, o);
 #endif
               }
+
             if (pconfig->async.enable == 1) {
               if (istep != pconfig->steps - 1) { // no sleep after the last es
                 if (rank == 0)
-                  printf("Computing... \n");
+                  printf("Read Computing... \n");
                 async_sleep(file, fapl, pconfig->async);
               }
               
@@ -357,6 +359,7 @@ void read_test
       H5ESclose(es->es_data);
     }
   assert(H5Fclose_async(file, 0) >= 0);
+  free(es);
   } else
 #endif
     assert(H5Fclose(file) >= 0);

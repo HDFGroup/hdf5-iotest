@@ -22,7 +22,7 @@
 #include <unistd.h>
 
 void
-h5bench_sleep(duration sleep_time)
+sleep_(duration sleep_time)
 {
     if (sleep_time.unit == TIME_SEC) {
         sleep(sleep_time.time_num);
@@ -50,7 +50,7 @@ async_sleep(hid_t file_id, hid_t fapl, duration sleep_time)
     if (H5VL_CAP_FLAG_ASYNC & cap)
         H5Fstart(file_id, fapl);
 #endif
-    h5bench_sleep(sleep_time);
+    sleep_(sleep_time);
 }
 
 void write_test
@@ -164,9 +164,10 @@ void write_test
   //  int timestep_cnt = pconfig->steps;
   //for (int ts_index = 0; ts_index < timestep_cnt; ts_index++) {
   //  time_step *ts = &(time_steps[ts_index]);
-
+  
 #if H5_VERSION_GE(1,13,0)
   if (pconfig->async.enable == 1) {
+    es    = calloc(1, sizeof(time_step));
     es->es_data      = H5EScreate();
     es->es_meta_data = H5EScreate();
   }
@@ -215,7 +216,7 @@ void write_test
             if (pconfig->async.enable == 1) {
               if (istep != pconfig->steps - 1) { // no sleep after the last es
                 if (rank == 0)
-                  printf("Computing... \n");
+                  printf("Write Computing... \n");
                 async_sleep(file, fapl, pconfig->async);
               }
 
@@ -282,7 +283,7 @@ void write_test
                 if (pconfig->async.enable == 1) {
                   if (istep != pconfig->steps - 1) { // no sleep after the last es
                     if (rank == 0)
-                      printf("Computing... \n");
+                      printf("Write Computing... \n");
                     async_sleep(file, fapl, pconfig->async);
                   }
                   
@@ -343,7 +344,7 @@ void write_test
                 if (pconfig->async.enable == 1) {
                   if (istep != pconfig->steps - 1) { // no sleep after the last es
                     if (rank == 0)
-                      printf("Computing... \n");
+                      printf("Write Computing... \n");
                     async_sleep(file, fapl, pconfig->async);
                   }
                   /* Even though we are writing the same data at each time step, normally we would need to 
@@ -391,8 +392,9 @@ void write_test
                 *write_time -= MPI_Wtime();
 
 #if H5_VERSION_GE(1,13,0)
-                if(es != NULL)
+                if(es != NULL) {
                   assert(H5Dwrite_async(dset, H5T_NATIVE_DOUBLE, mspace, fspace, dxpl, wbuf, es->es_data) >= 0);
+                }
                 else
 #endif
                   assert(H5Dwrite(dset, H5T_NATIVE_DOUBLE, mspace, fspace, dxpl, wbuf) >= 0);
@@ -410,14 +412,14 @@ void write_test
             if (pconfig->async.enable == 1) {
               if (istep != pconfig->steps - 1) { // no sleep after the last ts
                 if (rank == 0)
-                  printf("Computing... \n");
+                  printf("Write Computing... \n");
                 async_sleep(file, fapl, pconfig->async);
               }
               /* Even though we are writing the same data at each time step, normally we would need to 
                * fill the write buffer again before outputting the next time step. Here we
                * make sure write has completed before "filling" the write buffer again */
-#if H5_VERSION_GE(1,13,0)
-              H5ESwait(es->es_data, H5ES_WAIT_FOREVER, &num_in_progress, &op_failed);
+#if H5_VERSION_GE(1,13,0) 
+              H5ESwait(es->es_data, H5ES_WAIT_FOREVER, &num_in_progress, &op_failed); 
 #endif
             }
 
@@ -438,7 +440,8 @@ void write_test
       H5ESclose(es->es_meta_data);
       H5ESclose(es->es_data);
     }
-  assert(H5Fclose_async(file, 0) >= 0);
+    assert(H5Fclose_async(file, 0) >= 0);
+    free(es);
   } else
 #endif
     assert(H5Fclose(file) >= 0);
