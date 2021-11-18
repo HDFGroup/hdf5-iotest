@@ -82,4 +82,9 @@ void restart(
              hsize_t align_incr[]
 );
 
+
+int parse_time(char *str_in, duration *time);
+
+int parse_unit(char *str_in, unsigned long long *num, char **unit_str);
+
 #endif

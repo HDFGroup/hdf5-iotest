@@ -46,6 +46,10 @@ void read_test
 
   hid_t file, dset, fspace;
 
+  time_step *es = NULL;
+  size_t    num_in_progress;
+  hbool_t   op_failed;
+
 #ifdef VERIFY_DATA
   /* Extent of the logical 4D array and partition origin/offset */
   size_t d[4], o[4];
@@ -82,12 +86,29 @@ void read_test
   printf("\nWARNING: Data verification enabled. Timings will be distorted!!!\n");
 #endif
 
-  assert((file = H5Fopen(hdf5_filename, H5F_ACC_RDONLY, fapl)) >= 0);
+#if H5_VERSION_GE(1,13,0)
+  if (pconfig->async.enable == 1) {
+    es->es_data      = H5EScreate();
+    es->es_meta_data = H5EScreate();
+  }
+#endif
+
+#if H5_VERSION_GE(1,13,0)
+  if(es != NULL)
+    assert((file = H5Fopen_async(hdf5_filename, H5F_ACC_RDONLY, fapl, 0)) >= 0);
+  else
+#endif
+    assert((file = H5Fopen(hdf5_filename, H5F_ACC_RDONLY, fapl)) >= 0);
 
   switch (pconfig->rank)
     {
     case 4:
       {
+#if H5_VERSION_GE(1,13,0)
+        if(es != NULL)
+          assert((dset = H5Dopen_async(file, "dataset", dapl, es->es_meta_data)) >= 0);
+        else
+#endif
         assert((dset = H5Dopen(file, "dataset", dapl)) >= 0);
 
         for (istep = 0; istep < pconfig->steps; ++istep)
@@ -100,8 +121,12 @@ void read_test
                                  istep, iarray);
                 *create_time += MPI_Wtime();
                 *read_time -= MPI_Wtime();
-                assert(H5Dread(dset, H5T_NATIVE_DOUBLE, mspace, fspace, dxpl,
-                               rbuf) >= 0);
+#if H5_VERSION_GE(1,13,0)
+                if(es != NULL)
+                  assert(H5Dread_async(dset, H5T_NATIVE_DOUBLE, mspace, fspace, dxpl, rbuf, es->es_data) >= 0);
+                else
+#endif
+                  assert(H5Dread(dset, H5T_NATIVE_DOUBLE, mspace, fspace, dxpl, rbuf) >= 0);
                 *read_time += MPI_Wtime();
                 assert(H5Sclose(fspace) >= 0);
 
@@ -113,10 +138,32 @@ void read_test
                 verify_read_buffer(rbuf, &my_rows, &my_cols, d, o);
 #endif
               }
-          }
 
-        assert(H5Dclose(dset) >= 0);
+            /* Simulate the compute phase */
+            if (pconfig->async.enable == 1) {
+              if (istep != pconfig->steps - 1) { // no sleep after the last es
+                if (rank == 0)
+                  printf("Computing... \n");
+                async_sleep(file, fapl, pconfig->async);
+              }
+
+              /* Even though we are reading the same data at each time step, normally we would need to 
+               * fill the read buffer again before reading the next time step. Here we
+               * make sure reading has completed before "filling" the read buffer again */
+#if H5_VERSION_GE(1,13,0)
+              H5ESwait(es->es_data, H5ES_WAIT_FOREVER, &num_in_progress, &op_failed);
+#endif
+            }
+
+          }
+#if H5_VERSION_GE(1,13,0)
+        if(es != NULL)
+          assert(H5Dclose_async(dset, es->es_meta_data) >= 0);
+        else
+#endif
+          assert(H5Dclose(dset) >= 0);
       }
+
       break;
     case 3:
       {
@@ -136,8 +183,12 @@ void read_test
                     *create_time += MPI_Wtime();
 
                     *read_time -= MPI_Wtime();
-                    assert(H5Dread(dset, H5T_NATIVE_DOUBLE, mspace, fspace,
-                                   dxpl, rbuf) >= 0);
+#if H5_VERSION_GE(1,13,0)
+                    if(es != NULL)
+                      assert(H5Dread_async(dset, H5T_NATIVE_DOUBLE, mspace, fspace, dxpl, rbuf, es->es_data) >= 0);
+                    else
+#endif
+                      assert(H5Dread(dset, H5T_NATIVE_DOUBLE, mspace, fspace, dxpl, rbuf) >= 0);
                     *read_time += MPI_Wtime();
 
 #ifdef VERIFY_DATA
@@ -148,7 +199,27 @@ void read_test
                   }
 
                 assert(H5Sclose(fspace) >= 0);
-                assert(H5Dclose(dset) >= 0);
+#if H5_VERSION_GE(1,13,0)
+                if(es != NULL)
+                  assert(H5Dclose_async(dset, es->es_meta_data) >= 0);
+                else
+#endif
+                  assert(H5Dclose(dset) >= 0);
+
+                if (pconfig->async.enable == 1) {
+                  if (istep != pconfig->steps - 1) { // no sleep after the last es
+                    if (rank == 0)
+                      printf("Computing... \n");
+                    async_sleep(file, fapl, pconfig->async);
+                  }
+
+                  /* Even though we are reading the same data at each time step, normally we would need to 
+                   * fill the read buffer again before reading the next time step. Here we
+                   * make sure reading has completed before "filling" the read buffer again */
+#if H5_VERSION_GE(1,13,0)
+                  H5ESwait(es->es_data, H5ES_WAIT_FOREVER, &num_in_progress, &op_failed);
+#endif
+                }
 
               }
           }
@@ -167,12 +238,21 @@ void read_test
                     *create_time += MPI_Wtime();
 
                     *read_time -= MPI_Wtime();
-                    assert(H5Dread(dset, H5T_NATIVE_DOUBLE, mspace, fspace,
-                                   dxpl, rbuf) >= 0);
+#if H5_VERSION_GE(1,13,0)
+                    if(es != NULL)
+                      assert(H5Dread_async(dset, H5T_NATIVE_DOUBLE, mspace, fspace, dxpl, rbuf, es->es_data) >= 0);
+                    else
+#endif
+                      assert(H5Dread(dset, H5T_NATIVE_DOUBLE, mspace, fspace, dxpl, rbuf) >= 0);
                     *read_time += MPI_Wtime();
 
                     assert(H5Sclose(fspace) >= 0);
-                    assert(H5Dclose(dset) >= 0);
+#if H5_VERSION_GE(1,13,0)
+                    if(es != NULL)
+                      assert(H5Dclose_async(dset, es->es_meta_data) >= 0);
+                    else
+#endif
+                      assert(H5Dclose(dset) >= 0);
 
 #ifdef VERIFY_DATA
                     d[0] = pconfig->arrays; d[1] = pconfig->steps;
@@ -180,6 +260,22 @@ void read_test
                     verify_read_buffer(rbuf, &my_rows, &my_cols, d, o);
 #endif
                   }
+
+                if (pconfig->async.enable == 1) {
+                  if (istep != pconfig->steps - 1) { // no sleep after the last es
+                    if (rank == 0)
+                      printf("Computing... \n");
+                    async_sleep(file, fapl, pconfig->async);
+                  }
+
+                  /* Even though we are reading the same data at each time step, normally we would need to 
+                   * fill the read buffer again before reading the next time step. Here we
+                   * make sure reading has completed before "filling" the read buffer again */
+#if H5_VERSION_GE(1,13,0)
+                  H5ESwait(es->es_data, H5ES_WAIT_FOREVER, &num_in_progress, &op_failed);
+#endif
+                }
+
               }
           }
       }
@@ -205,12 +301,21 @@ void read_test
                 *create_time += MPI_Wtime();
 
                 *read_time -= MPI_Wtime();
-                assert(H5Dread(dset, H5T_NATIVE_DOUBLE, mspace, fspace, dxpl,
-                               rbuf) >= 0);
+#if H5_VERSION_GE(1,13,0)
+                if(es != NULL)
+                  assert(H5Dread_async(dset, H5T_NATIVE_DOUBLE, mspace, fspace, dxpl, rbuf, es->es_data) >= 0);
+                else
+#endif
+                  assert(H5Dread(dset, H5T_NATIVE_DOUBLE, mspace, fspace, dxpl, rbuf) >= 0);
                 *read_time += MPI_Wtime();
 
                 assert(H5Sclose(fspace) >= 0);
-                assert(H5Dclose(dset) >= 0);
+#if H5_VERSION_GE(1,13,0)
+                if(es != NULL)
+                  assert(H5Dclose_async(dset, es->es_meta_data) >= 0);
+                else
+#endif
+                  assert(H5Dclose(dset) >= 0);
 
 #ifdef VERIFY_DATA
                 d[0] = step_first_flg ? pconfig->steps : pconfig->arrays;
@@ -220,6 +325,21 @@ void read_test
                 verify_read_buffer(rbuf, &my_rows, &my_cols, d, o);
 #endif
               }
+            if (pconfig->async.enable == 1) {
+              if (istep != pconfig->steps - 1) { // no sleep after the last es
+                if (rank == 0)
+                  printf("Computing... \n");
+                async_sleep(file, fapl, pconfig->async);
+              }
+              
+              /* Even though we are reading the same data at each time step, normally we would need to 
+               * fill the read buffer again before reading the next time step. Here we
+               * make sure reading has completed before "filling" the read buffer again */
+#if H5_VERSION_GE(1,13,0)
+              H5ESwait(es->es_data, H5ES_WAIT_FOREVER, &num_in_progress, &op_failed);
+#endif
+            }
+
           }
       }
       break;
@@ -227,7 +347,20 @@ void read_test
       break;
     }
 
-  assert(H5Fclose(file) >= 0);
+#if H5_VERSION_GE(1,13,0)
+  if(es != NULL) {
+    if (pconfig->async.enable == 1) {
+#if H5_VERSION_GE(1,13,0)
+      H5ESwait(es->es_meta_data, H5ES_WAIT_FOREVER, &num_in_progress, &op_failed);
+#endif
+      H5ESclose(es->es_meta_data);
+      H5ESclose(es->es_data);
+    }
+  assert(H5Fclose_async(file, 0) >= 0);
+  } else
+#endif
+    assert(H5Fclose(file) >= 0);
+
   assert(H5Sclose(mspace) >= 0);
   free(rbuf);
 }

@@ -23,6 +23,57 @@
  *
  */
 
+
+int
+parse_unit(const char *str_in, unsigned long long *num, char **unit_str)
+{
+    char *str     = strdup(str_in);
+    char *ptr     = NULL;
+    ptr           = strtok(str, " ");
+    char *num_str = strdup(ptr);
+    if (!num_str) {
+        printf("Number parsing failed: \"%s\" is not recognized.\n", str_in);
+        return -1;
+    }
+    char *endptr;
+    *num = strtoul(num_str, &endptr, 10);
+    ptr  = strtok(NULL, " ");
+    if (ptr)
+        *unit_str = strdup(ptr);
+    else
+        *unit_str = NULL;
+    return 0;
+}
+
+int
+parse_time(const char *str_in, duration *time)
+{
+    if (!time)
+        time = calloc(1, sizeof(duration));
+    unsigned long long num = 0;
+    char *             unit_str;
+    parse_unit(str_in, &num, &unit_str);
+
+    if (!unit_str)
+        time->unit = TIME_SEC;
+    else if (unit_str[0] == 'S' || unit_str[0] == 's')
+        time->unit = TIME_SEC;
+    else if (unit_str[0] == 'M' || unit_str[0] == 'm') {
+        if (strcmp(unit_str, "ms") == 0 || strcmp(unit_str, "MS") == 0)
+            time->unit = TIME_MS;
+        else
+            time->unit = TIME_MIN;
+    }
+    else if (unit_str[0] == 'U' || unit_str[0] == 'u')
+        time->unit = TIME_US;
+    else {
+        printf("time parsing failed\n");
+        return -1;
+    }
+    time->time_num = num;
+    return 0;
+}
+
 int check_options
 (
  configuration* pconfig,
@@ -82,6 +133,21 @@ int check_options
     strncpy(pconfig->csv_file, value, PATH_MAX-1);
   } else if (MATCH(section, "restart")) {
     pconfig->restart = (unsigned int) atol(value);
+  } else if (MATCH(section, "async")) {
+#if !H5_VERSION_GE(1,13,0)
+      printf("ASYNC only supported for HDF5 version > 1.12 \n");
+      return 0;
+#endif
+    duration time;
+    if (parse_time(value, &time) < 0)
+      return 0;
+    if (time.time_num >= 0) {
+      pconfig->async = time;
+      pconfig->async.enable = 1;
+    } else {
+      printf("EMULATED_COMPUTE_TIME_PER_TIMESTEP must be at least 0.\n");
+      return 0;
+    }
   } else if (MATCH(section, "one-case")) {
     pconfig->one_case = (unsigned int) atol(value);
   } else if (MATCH(section, "gzip")) {
@@ -177,6 +243,8 @@ int validate(configuration* pconfig, const int size)
   assert(pconfig->restart == 0 || pconfig->restart == 1);
   assert(pconfig->split == 0 || pconfig->split == 1);
   assert(pconfig->one_case >= 0);
+  assert(pconfig->async.enable >= 0);
+
 
   if (strncmp(pconfig->compress_type, "gzip", 16) == 0) {
     /* check if gzip compression is available */

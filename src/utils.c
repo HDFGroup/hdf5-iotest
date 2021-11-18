@@ -26,7 +26,7 @@ void create_output_file(const char* fname)
   assert(fptr != NULL);
   fprintf(fptr, "steps,arrays,rows,cols,scaling,proc-rows,proc-cols,"
           "slowdim,rank,version,alignment-increment,alignment-threshold,"
-          "meta-block-size,layout,fill,fmt,io,wall [s],fsize [B],"
+          "meta-block-size,layout,fill,fmt,io, async, wall [s],fsize [B],"
           "write-phase-min [s],write-phase-max [s],"
           "creat-min [s],creat-max [s],"
           "write-min [s],write-max [s],"
@@ -105,7 +105,7 @@ void print_results
   { /* write results to the CSV file */
     FILE *fptr = fopen(pconfig->csv_file, "a");
     assert(fptr != NULL);
-    fprintf(fptr, "%d,%d,%ld,%ld,%s,%d,%d,%s,%d,%s,%llu,%llu,%llu,%s,%s,%s,%s,"
+    fprintf(fptr, "%d,%d,%ld,%ld,%s,%d,%d,%s,%d,%s,%llu,%llu,%llu,%s,%s,%s,%s,%d"
             "%.4f,%.0f,%.4f,%.4f,%.4f,%.4f,"
             "%.4f,%.4f,%.4f,%.4f,%.4f,%.4f\n",
             pconfig->steps, pconfig->arrays, pconfig->rows, pconfig->cols,
@@ -115,7 +115,7 @@ void print_results
             (unsigned long long)pconfig->alignment_threshold,
 	    (unsigned long long)pconfig->meta_block_size,
             pconfig->layout, pconfig->fill_values, pconfig->libver_bound_low,
-            pconfig->mpi_io, wall_time, (double)fsize,
+            pconfig->mpi_io, pconfig->async.enable, wall_time, (double)fsize,
             pts->min_write_phase, pts->max_write_phase,
             pts->min_create_time, pts->max_create_time,
             pts->min_write_time, pts->max_write_time,
