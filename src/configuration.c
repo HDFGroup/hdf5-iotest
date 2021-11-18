@@ -71,6 +71,7 @@ parse_time(const char *str_in, duration *time)
         return -1;
     }
     time->time_num = num;
+    time->enable = 1;
     return 0;
 }
 
@@ -138,14 +139,15 @@ int check_options
       printf("ASYNC only supported for HDF5 version > 1.12 \n");
       return 0;
 #endif
+      pconfig->async = 1;
+  } else if (MATCH(section, "delay")) {
     duration time;
     if (parse_time(value, &time) < 0)
       return 0;
     if (time.time_num >= 0) {
-      pconfig->async = time;
-      pconfig->async.enable = 1;
+      pconfig->delay = time;
     } else {
-      printf("EMULATED_COMPUTE_TIME_PER_TIMESTEP must be at least 0.\n");
+      printf("emulated compute phase time must be at least 0.\n");
       return 0;
     }
   } else if (MATCH(section, "one-case")) {
@@ -243,7 +245,6 @@ int validate(configuration* pconfig, const int size)
   assert(pconfig->restart == 0 || pconfig->restart == 1);
   assert(pconfig->split == 0 || pconfig->split == 1);
   assert(pconfig->one_case >= 0);
-  assert(pconfig->async.enable >= 0);
 
 
   if (strncmp(pconfig->compress_type, "gzip", 16) == 0) {

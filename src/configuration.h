@@ -65,7 +65,8 @@ typedef struct
   unsigned int  HDF5perCase;
   char          compress_type[16];
   unsigned int  compress_par[2];
-  duration      async;
+  int           async;
+  duration      delay;
 } configuration;
 
 extern int handler(void* user,

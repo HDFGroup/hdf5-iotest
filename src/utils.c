@@ -115,7 +115,7 @@ void print_results
             (unsigned long long)pconfig->alignment_threshold,
 	    (unsigned long long)pconfig->meta_block_size,
             pconfig->layout, pconfig->fill_values, pconfig->libver_bound_low,
-            pconfig->mpi_io, pconfig->async.enable, wall_time, (double)fsize,
+            pconfig->mpi_io, pconfig->async, wall_time, (double)fsize,
             pts->min_write_phase, pts->max_write_phase,
             pts->min_create_time, pts->max_create_time,
             pts->min_write_time, pts->max_write_time,

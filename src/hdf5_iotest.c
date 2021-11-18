@@ -79,8 +79,8 @@ int main(int argc, char* argv[])
       config.csv_file[0] = '\0';
       config.restart = 0;
       config.split = 0;
-      config.async.time_num = 0;
-      config.async.enable = 0;
+      config.delay.time_num = 0;
+      config.async = 0;
       config.one_case = 0;
       config.HDF5perCase = 0;
       config.compress_type[0] = '\0';

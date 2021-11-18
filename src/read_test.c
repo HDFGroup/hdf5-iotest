@@ -87,7 +87,7 @@ void read_test
 #endif
 
 #if H5_VERSION_GE(1,13,0)
-  if (pconfig->async.enable == 1) {
+  if (pconfig->async == 1) {
     es    = calloc(1, sizeof(time_step));
     es->es_data      = H5EScreate();
     es->es_meta_data = H5EScreate();
@@ -141,11 +141,11 @@ void read_test
               }
 
             /* Simulate the compute phase */
-            if (pconfig->async.enable == 1) {
+            if (pconfig->delay.enable == 1) {
               if (istep != pconfig->steps - 1) { // no sleep after the last es
                 if (rank == 0)
                   printf("Read Computing... \n");
-                async_sleep(file, fapl, pconfig->async);
+                async_sleep(file, fapl, pconfig->delay);
               }
 
               /* Even though we are reading the same data at each time step, normally we would need to 
@@ -207,11 +207,11 @@ void read_test
 #endif
                   assert(H5Dclose(dset) >= 0);
 
-                if (pconfig->async.enable == 1) {
+                if (pconfig->delay.enable == 1) {
                   if (istep != pconfig->steps - 1) { // no sleep after the last es
                     if (rank == 0)
                       printf("Read Computing... \n");
-                    async_sleep(file, fapl, pconfig->async);
+                    async_sleep(file, fapl, pconfig->delay);
                   }
 
                   /* Even though we are reading the same data at each time step, normally we would need to 
@@ -262,11 +262,11 @@ void read_test
 #endif
                   }
 
-                if (pconfig->async.enable == 1) {
+                if (pconfig->delay.enable == 1) {
                   if (istep != pconfig->steps - 1) { // no sleep after the last es
                     if (rank == 0)
                       printf("Read Computing... \n");
-                    async_sleep(file, fapl, pconfig->async);
+                    async_sleep(file, fapl, pconfig->delay);
                   }
 
                   /* Even though we are reading the same data at each time step, normally we would need to 
@@ -327,11 +327,11 @@ void read_test
 #endif
               }
 
-            if (pconfig->async.enable == 1) {
+            if (pconfig->delay.enable == 1) {
               if (istep != pconfig->steps - 1) { // no sleep after the last es
                 if (rank == 0)
                   printf("Read Computing... \n");
-                async_sleep(file, fapl, pconfig->async);
+                async_sleep(file, fapl, pconfig->delay);
               }
               
               /* Even though we are reading the same data at each time step, normally we would need to 
@@ -351,7 +351,7 @@ void read_test
 
 #if H5_VERSION_GE(1,13,0)
   if(es != NULL) {
-    if (pconfig->async.enable == 1) {
+    if (pconfig->async == 1) {
 #if H5_VERSION_GE(1,13,0)
       H5ESwait(es->es_meta_data, H5ES_WAIT_FOREVER, &num_in_progress, &op_failed);
 #endif

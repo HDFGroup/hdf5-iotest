@@ -18,8 +18,6 @@
 
 #include "hdf5.h"
 
-typedef enum ts_status { TS_INIT, TS_DELAY, TS_READY, TS_DONE } ts_status;
-
 typedef struct time_step time_step;
 
 struct time_step {
@@ -27,8 +25,6 @@ struct time_step {
     hid_t              es_meta_close;
     hid_t              es_data;
     hid_t              es_meta_data;
-    hid_t              dset_ids[8];
-    ts_status          status;
 };
 
 extern hid_t create_dcpl(const configuration* config, unsigned int coll_mpi_io_flg);
