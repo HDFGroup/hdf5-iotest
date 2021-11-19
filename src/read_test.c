@@ -147,14 +147,14 @@ void read_test
                   printf("Read Computing... \n");
                 async_sleep(file, fapl, pconfig->delay);
               }
-
-              /* Even though we are reading the same data at each time step, normally we would need to 
-               * fill the read buffer again before reading the next time step. Here we
-               * make sure reading has completed before "filling" the read buffer again */
+            }
+            /* Even though we are reading the same data at each time step, normally we would need to 
+             * fill the read buffer again before reading the next time step. Here we
+             * make sure reading has completed before "filling" the read buffer again */
 #if H5_VERSION_GE(1,13,0)
+            if(es != NULL)
               H5ESwait(es->es_data, H5ES_WAIT_FOREVER, &num_in_progress, &op_failed);
 #endif
-            }
 
           }
 #if H5_VERSION_GE(1,13,0)
@@ -213,15 +213,14 @@ void read_test
                       printf("Read Computing... \n");
                     async_sleep(file, fapl, pconfig->delay);
                   }
-
-                  /* Even though we are reading the same data at each time step, normally we would need to 
-                   * fill the read buffer again before reading the next time step. Here we
-                   * make sure reading has completed before "filling" the read buffer again */
+                }
+                /* Even though we are reading the same data at each time step, normally we would need to 
+                 * fill the read buffer again before reading the next time step. Here we
+                 * make sure reading has completed before "filling" the read buffer again */
 #if H5_VERSION_GE(1,13,0)
+                if(es != NULL)
                   H5ESwait(es->es_data, H5ES_WAIT_FOREVER, &num_in_progress, &op_failed);
 #endif
-                }
-
               }
           }
         else /* dataset per array */
@@ -268,15 +267,14 @@ void read_test
                       printf("Read Computing... \n");
                     async_sleep(file, fapl, pconfig->delay);
                   }
-
-                  /* Even though we are reading the same data at each time step, normally we would need to 
-                   * fill the read buffer again before reading the next time step. Here we
-                   * make sure reading has completed before "filling" the read buffer again */
+                }
+                /* Even though we are reading the same data at each time step, normally we would need to 
+                 * fill the read buffer again before reading the next time step. Here we
+                 * make sure reading has completed before "filling" the read buffer again */
 #if H5_VERSION_GE(1,13,0)
+                if(es != NULL)
                   H5ESwait(es->es_data, H5ES_WAIT_FOREVER, &num_in_progress, &op_failed);
 #endif
-                }
-
               }
           }
       }
@@ -333,15 +331,14 @@ void read_test
                   printf("Read Computing... \n");
                 async_sleep(file, fapl, pconfig->delay);
               }
-              
-              /* Even though we are reading the same data at each time step, normally we would need to 
-               * fill the read buffer again before reading the next time step. Here we
-               * make sure reading has completed before "filling" the read buffer again */
+            }
+            /* Even though we are reading the same data at each time step, normally we would need to 
+             * fill the read buffer again before reading the next time step. Here we
+             * make sure reading has completed before "filling" the read buffer again */
 #if H5_VERSION_GE(1,13,0)
+            if(es != NULL)
               H5ESwait(es->es_data, H5ES_WAIT_FOREVER, &num_in_progress, &op_failed);
 #endif
-            }
-
           }
       }
       break;
@@ -352,14 +349,12 @@ void read_test
 #if H5_VERSION_GE(1,13,0)
   if(es != NULL) {
     if (pconfig->async == 1) {
-#if H5_VERSION_GE(1,13,0)
       H5ESwait(es->es_meta_data, H5ES_WAIT_FOREVER, &num_in_progress, &op_failed);
-#endif
       H5ESclose(es->es_meta_data);
       H5ESclose(es->es_data);
     }
-  assert(H5Fclose_async(file, 0) >= 0);
-  free(es);
+    assert(H5Fclose_async(file, 0) >= 0);
+    free(es);
   } else
 #endif
     assert(H5Fclose(file) >= 0);

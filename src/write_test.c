@@ -219,15 +219,14 @@ void write_test
                   printf("Write Computing... \n");
                 async_sleep(file, fapl, pconfig->delay);
               }
-
-              /* Even though we are writing the same data at each time step, normally we would need to 
-               * fill the write buffer again before outputting the next time step. Here we
-               * make sure write has completed before "filling" the write buffer again */
+            }
+            /* Even though we are writing the same data at each time step, normally we would need to 
+             * fill the write buffer again before outputting the next time step. Here we
+             * make sure write has completed before "filling" the write buffer again */
 #if H5_VERSION_GE(1,13,0)
+            if(es != NULL)
               H5ESwait(es->es_data, H5ES_WAIT_FOREVER, &num_in_progress, &op_failed);
 #endif
-            }
- 
           }
 #if H5_VERSION_GE(1,13,0)
         if(es != NULL)
@@ -286,15 +285,15 @@ void write_test
                       printf("Write Computing... \n");
                     async_sleep(file, fapl, pconfig->delay);
                   }
+                }
                   
-                  /* Even though we are writing the same data at each time step, normally we would need to 
-                   * fill the write buffer again before outputting the next time step. Here we
-                   * make sure write has completed before "filling" the write buffer again */
+                /* Even though we are writing the same data at each time step, normally we would need to 
+                 * fill the write buffer again before outputting the next time step. Here we
+                 * make sure write has completed before "filling" the write buffer again */
 #if H5_VERSION_GE(1,13,0)
+                if(es != NULL)
                   H5ESwait(es->es_data, H5ES_WAIT_FOREVER, &num_in_progress, &op_failed);
 #endif
-                }
-
               }
           }
         else /* dataset per array */
@@ -347,14 +346,14 @@ void write_test
                       printf("Write Computing... \n");
                     async_sleep(file, fapl, pconfig->delay);
                   }
-                  /* Even though we are writing the same data at each time step, normally we would need to 
-                   * fill the write buffer again before outputting the next time step. Here we
-                   * make sure write has completed before "filling" the write buffer again */
+                }
+                /* Even though we are writing the same data at each time step, normally we would need to 
+                 * fill the write buffer again before outputting the next time step. Here we
+                 * make sure write has completed before "filling" the write buffer again */
 #if H5_VERSION_GE(1,13,0)
+                if(es != NULL)
                   H5ESwait(es->es_data, H5ES_WAIT_FOREVER, &num_in_progress, &op_failed);
 #endif
-                }
-
               }
           }
       }
@@ -415,14 +414,14 @@ void write_test
                   printf("Write Computing... \n");
                 async_sleep(file, fapl, pconfig->delay);
               }
-              /* Even though we are writing the same data at each time step, normally we would need to 
-               * fill the write buffer again before outputting the next time step. Here we
-               * make sure write has completed before "filling" the write buffer again */
+            }
+            /* Even though we are writing the same data at each time step, normally we would need to 
+             * fill the write buffer again before outputting the next time step. Here we
+             * make sure write has completed before "filling" the write buffer again */
 #if H5_VERSION_GE(1,13,0) 
+            if(es != NULL)
               H5ESwait(es->es_data, H5ES_WAIT_FOREVER, &num_in_progress, &op_failed); 
 #endif
-            }
-
           }
       }
       break;
@@ -433,15 +432,11 @@ void write_test
   *create_time -= MPI_Wtime();
 #if H5_VERSION_GE(1,13,0)
   if(es != NULL) {
-    if (pconfig->async == 1) {
-#if H5_VERSION_GE(1,13,0)
       H5ESwait(es->es_meta_data, H5ES_WAIT_FOREVER, &num_in_progress, &op_failed);
-#endif
       H5ESclose(es->es_meta_data);
       H5ESclose(es->es_data);
-    }
-    assert(H5Fclose_async(file, 0) >= 0);
-    free(es);
+      assert(H5Fclose_async(file, 0) >= 0);
+      free(es);
   } else
 #endif
     assert(H5Fclose(file) >= 0);
