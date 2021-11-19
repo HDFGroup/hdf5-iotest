@@ -65,7 +65,7 @@ typedef struct
   unsigned int  HDF5perCase;
   char          compress_type[16];
   unsigned int  compress_par[2];
-  int           async;
+  unsigned int  async;
   duration      delay;
 } configuration;
 

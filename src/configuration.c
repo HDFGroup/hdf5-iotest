@@ -139,7 +139,7 @@ int check_options
       printf("ASYNC only supported for HDF5 version > 1.12 \n");
       return 0;
 #endif
-      pconfig->async = 1;
+      pconfig->async = (unsigned int) atol(value);
   } else if (MATCH(section, "delay")) {
     duration time;
     if (parse_time(value, &time) < 0)
