@@ -42,6 +42,7 @@ typedef struct
   unsigned int imblk;
   unsigned int ifmt;
   unsigned int imod;
+  unsigned int async;
 } restart_t;
 
 void create_output_file(const char* fname);

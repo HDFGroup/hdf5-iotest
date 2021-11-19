@@ -343,6 +343,8 @@ void restart(
             } else {
               ckpt->imblk = 1;
             }
+          } else if(icnt == 17) {
+            ckpt->async = (unsigned int)atoi(ptr);
           }
           icnt++;
           ptr = strtok(NULL, delim);
