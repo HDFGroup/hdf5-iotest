@@ -105,7 +105,7 @@ void print_results
   { /* write results to the CSV file */
     FILE *fptr = fopen(pconfig->csv_file, "a");
     assert(fptr != NULL);
-    fprintf(fptr, "%d,%d,%ld,%ld,%s,%d,%d,%s,%d,%s,%llu,%llu,%llu,%s,%s,%s,%s,%d"
+    fprintf(fptr, "%d,%d,%ld,%ld,%s,%d,%d,%s,%d,%s,%llu,%llu,%llu,%s,%s,%s,%s,%u,"
             "%.4f,%.0f,%.4f,%.4f,%.4f,%.4f,"
             "%.4f,%.4f,%.4f,%.4f,%.4f,%.4f\n",
             pconfig->steps, pconfig->arrays, pconfig->rows, pconfig->cols,
