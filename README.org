@@ -332,6 +332,22 @@ The following configuration parameters are supported.
     szip = H5_SZIP_NN_OPTION_MASK, 8
     #+end_src
 
+- Async :: Specifies calling the async APIs (requires HDF5 version > 1.12) and
+    [[https://github.com/hpc-io/vol-async][ASYNC VOL]]
+
+    #+begin_src conf-unix :noweb-ref hdf5-iotest-conf
+    # enable async [0 - no, 1 - yes]
+    async = 1
+    #+end_src
+
+- Delay :: Add a delay between time steps. Helpful in simulating a computing phase
+    when doing async I/O.
+
+    #+begin_src conf-unix :noweb-ref hdf5-iotest-conf
+    # delay in the form of an integer and time unit second 's 'or milliseconds 'ms'
+    delay = 1s
+    #+end_src
+
 * Internal Parameters<<sec:internal-parameters>>
 
 Currently, the I/O test varies the following parameters:
