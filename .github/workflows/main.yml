@@ -15,11 +15,14 @@ jobs:
   build:
     strategy:
       matrix:
-        name: ["Ubuntu Latest GCC"]
+        name: ["Ubuntu Latest GCC", "macOS Latest Clang"]
         include:
           - name: "Ubuntu Latest GCC"
             artifact: "Linux.tar.xz"
             os: ubuntu-latest
+          - name: "macOS Latest Clang"
+            artifact: "macOS.tar.xz"
+            os: macos-latest
 
     name: ${{ matrix.name }}
     # The type of runner that the job will run on.
@@ -38,6 +41,34 @@ jobs:
         echo "CC=mpicc" >> $GITHUB_ENV
         echo "CPPFLAGS=-I/usr/include/hdf5/mpich" >> $GITHUB_ENV
         echo "LDFLAGS=-L/usr/lib/x86_64-linux-gnu/hdf5/mpich" >> $GITHUB_ENV
+
+    - name: Install Dependencies (macOS)
+      if: matrix.os == 'macos-latest'
+      run: |
+        # Use the newest stable gcc compiler
+        brew update
+        brew upgrade gcc
+        brew install gcc
+        brew unlink gcc && brew link gcc
+        brew install mpich
+        # Set env vars
+        echo "OS_NAME=macOS" >> $GITHUB_ENV
+        echo "CC=mpicc" >> $GITHUB_ENV
+        ##################################
+        # INSTALL HDF5 FROM SOURCE
+        ##################################
+        git clone https://github.com/HDFGroup/hdf5.git
+        export HOME_DIR=$(echo ~)
+        cd hdf5
+        ./configure --without-szlib --disable-fortran --disable-hl \
+        --disable-tests --disable-tools \
+        --prefix=$HOME_DIR/hdf5 \
+        --enable-parallel
+        make -j 8 install
+        mydir="$PWD"
+        export HDF5_DIR=$mydir/hdf5
+        echo "CPPFLAGS=-I$HDF5_DIR/include" >> $GITHUB_ENV
+        echo "LDFLAGS=-L$HDF5_DIR/lib" >> $GITHUB_ENV
 
  # Checks-out the repository under $GITHUB_WORKSPACE so the job can access it.
     - name: Get Sources
