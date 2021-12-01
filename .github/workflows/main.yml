@@ -60,6 +60,7 @@ jobs:
         git clone https://github.com/HDFGroup/hdf5.git
         export HOME_DIR=$(echo ~)
         cd hdf5
+        ./autogen.sh
         ./configure --without-szlib --disable-fortran --disable-hl \
         --disable-tests --disable-tools \
         --prefix=$HOME_DIR/hdf5 \
