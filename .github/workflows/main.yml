@@ -53,6 +53,9 @@ jobs:
         # Set env vars
         echo "OS_NAME=macOS" >> $GITHUB_ENV
         echo "CC=mpicc" >> $GITHUB_ENV
+        echo "void main() { int i; }" > t.c
+        $CC t.c
+
         ##################################
         # INSTALL HDF5 FROM SOURCE
         ##################################
