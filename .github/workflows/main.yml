@@ -22,7 +22,7 @@ jobs:
             os: ubuntu-latest
           - name: "Ubuntu Latest GCC -- Parallel"
             artifact: "Linux.tar.xz"
-            os: ubuntu-latest
+            os: ubuntu-latest-parallel
 
     name: ${{ matrix.name }}
     # The type of runner that the job will run on.
@@ -42,8 +42,8 @@ jobs:
         echo "CPPFLAGS=-I/usr/include/hdf5/mpich" >> $GITHUB_ENV
         echo "LDFLAGS=-L/usr/lib/x86_64-linux-gnu/hdf5/mpich" >> $GITHUB_ENV
 
-    - name: Install Dependencies (macOS)
-      if: matrix.os == 'macos-latest'
+    - name: Install Dependencies (Linux-parallel)
+      if: matrix.os == 'ubuntu-latest-parallel'
       run: |
         # Use the newest stable gcc compiler
         sudo apt-get install -qq mpich
