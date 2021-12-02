@@ -51,6 +51,8 @@ jobs:
         brew install gcc
         brew unlink gcc && brew link gcc
         brew install mpich
+        brew install autoconf
+        brew install automake
         # Set env vars
         echo "OS_NAME=macOS" >> $GITHUB_ENV
         echo "CC=mpicc" >> $GITHUB_ENV
