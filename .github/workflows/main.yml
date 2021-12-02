@@ -47,10 +47,7 @@ jobs:
       run: |
         # Use the newest stable gcc compiler
         brew update
-        brew upgrade gcc
-        brew install gcc
-        brew unlink gcc && brew link gcc
-        brew install mpich
+        brew install mpich || brew upgrade mpich
         brew install autoconf
         brew install automake
         # Set env vars
@@ -61,6 +58,7 @@ jobs:
         ##################################
         git clone https://github.com/HDFGroup/hdf5.git
         export HOME_DIR=$(echo ~)
+        export LDFLAGS="-L/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/lib" >> $GITHUB_ENV
         mpicc -v
         cd hdf5
         ./autogen.sh
