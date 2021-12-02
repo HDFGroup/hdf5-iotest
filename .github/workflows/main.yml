@@ -58,7 +58,7 @@ jobs:
         ##################################
         git clone https://github.com/HDFGroup/hdf5.git
         export HOME_DIR=$(echo ~)
-        export LDFLAGS="-L/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/lib" >> $GITHUB_ENV
+        export LDFLAGS="-L/Applications/Xcode_12.4.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib" >> $GITHUB_ENV
         mpicc -v
         cd hdf5
         ./autogen.sh
