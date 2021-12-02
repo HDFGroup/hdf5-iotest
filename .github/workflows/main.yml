@@ -61,7 +61,7 @@ jobs:
         export HOME_DIR=$(echo ~)
         cd hdf5
         ./autogen.sh
-        ./configure --without-szlib --disable-fortran --disable-hl \
+        ./configure --enable-build-mode=debug --without-szlib --disable-fortran --disable-hl \
         --disable-tests --disable-tools \
         --prefix=$HOME_DIR/hdf5 \
         --enable-parallel
