@@ -21,7 +21,7 @@ jobs:
             artifact: "Linux.tar.xz"
             os: ubuntu-latest
             hdf5: "release"
-          - name: "Ubuntu Latest GCC -- Parallel"
+          - name: "Ubuntu Latest GCC -- develop"
             artifact: "Linux.tar.xz"
             os: ubuntu-latest
             hdf5: "develop"
