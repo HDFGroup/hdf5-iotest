@@ -15,14 +15,16 @@ jobs:
   build:
     strategy:
       matrix:
-        name: ["Ubuntu Latest GCC", "Ubuntu Latest GCC -- Parallel"]
+        name: ["Ubuntu Latest GCC", "Ubuntu Latest GCC -- develop"]
         include:
           - name: "Ubuntu Latest GCC"
             artifact: "Linux.tar.xz"
             os: ubuntu-latest
+            hdf5: release
           - name: "Ubuntu Latest GCC -- Parallel"
             artifact: "Linux.tar.xz"
-            os: ubuntu-latest-parallel
+            os: ubuntu-latest
+            hdf5: develop
 
     name: ${{ matrix.name }}
     # The type of runner that the job will run on.
@@ -32,8 +34,8 @@ jobs:
     # Steps represent a sequence of tasks that will be executed 
     # as part of the job.
     steps:
-    - name: Install Dependencies (Linux)
-      if: matrix.os == 'ubuntu-latest'
+    - name: Install Dependencies (Linux--HDF5-release)
+      if: matrix.hdf5 == 'release'
       run: |
         sudo apt-get install -qq mpich
         sudo apt-get install -qq libhdf5-mpich-dev
@@ -42,8 +44,8 @@ jobs:
         echo "CPPFLAGS=-I/usr/include/hdf5/mpich" >> $GITHUB_ENV
         echo "LDFLAGS=-L/usr/lib/x86_64-linux-gnu/hdf5/mpich" >> $GITHUB_ENV
 
-    - name: Install Dependencies (Linux-parallel)
-      if: matrix.os == 'ubuntu-latest-parallel'
+    - name: Install Dependencies (Linux--HDF5-develop)
+      if: matrix.hdf5 == 'develop'
       run: |
         # Use the newest stable gcc compiler
         sudo apt-get install -qq mpich
