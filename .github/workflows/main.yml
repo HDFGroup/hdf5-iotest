@@ -48,6 +48,8 @@ jobs:
       if: matrix.hdf5 == 'develop'
       run: |
         # Use the newest stable gcc compiler
+        sudo apt-get install automake
+        sudo apt-get install autoconf
         sudo apt-get install -qq mpich
         echo "CC=mpicc" >> $GITHUB_ENV
 
