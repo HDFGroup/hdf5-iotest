@@ -146,9 +146,11 @@ int main(int argc, char* argv[])
   assert(H5Pset_create_intermediate_group(lcpl, 1) >= 0);
 
   if (size > 1 || (strncmp(config.single_process, "mpi-io-uni", 16) == 0))
-    assert(H5Pset_fapl_mpio(fapl, MPI_COMM_WORLD, MPI_INFO_NULL) >= 0);
-    assert(H5Pset_all_coll_metadata_ops(fapl, 1) >= 0);
-    assert(H5Pset_coll_metadata_write(fapl, 1) >= 0);
+    {
+      assert(H5Pset_fapl_mpio(fapl, MPI_COMM_WORLD, MPI_INFO_NULL) >= 0);
+      assert(H5Pset_all_coll_metadata_ops(fapl, 1) >= 0);
+      assert(H5Pset_coll_metadata_write(fapl, 1) >= 0);
+    }
   else
     if (strncmp(config.single_process, "core", 16) == 0)
       assert(H5Pset_fapl_core(fapl, 67108864, 1) >= 0); /* 64 MB increments */
