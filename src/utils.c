@@ -79,8 +79,12 @@ void print_results
     } 
   else 
     {
-      assert((file = H5Fopen(hdf5_filename, H5F_ACC_RDONLY, H5P_DEFAULT)) >= 0);
+      hid_t fapl;
+      assert((fapl = H5Pcreate(H5P_FILE_ACCESS)) >= 0);
+      assert(H5Pset_fapl_mpio(fapl, MPI_COMM_SELF, MPI_INFO_NULL) >= 0);
+      assert((file = H5Fopen(hdf5_filename, H5F_ACC_RDONLY, fapl)) >= 0);
       assert(H5Fget_filesize(file, &fsize) >= 0);
+      assert(H5Pclose(fapl) >= 0);
       assert(H5Fclose(file) >= 0);
     }
 
