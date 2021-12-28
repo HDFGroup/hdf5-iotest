@@ -19,6 +19,39 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
+
+void
+sleep_(duration sleep_time)
+{
+    if (sleep_time.unit == TIME_SEC) {
+        sleep(sleep_time.time_num);
+    }
+    else if (sleep_time.unit == TIME_MIN) {
+
+        sleep(60 * sleep_time.time_num);
+    }
+    else {
+        if (sleep_time.unit == TIME_MS)
+            usleep(1000 * sleep_time.time_num);
+        else if (sleep_time.unit == TIME_US)
+            usleep(sleep_time.time_num);
+        else
+            printf("Invalid sleep time unit.\n");
+    }
+}
+
+void
+async_sleep(hid_t file_id, hid_t fapl, duration sleep_time)
+{
+#ifdef USE_ASYNC_VOL
+    unsigned cap = 0;
+    H5Pget_vol_cap_flags(fapl, &cap);
+    if (H5VL_CAP_FLAG_ASYNC & cap)
+        H5Fstart(file_id, fapl);
+#endif
+    sleep_(sleep_time);
+}
 
 void write_test
 (
@@ -40,7 +73,7 @@ void write_test
  double* write_time
  )
 {
-  unsigned int step_first_flg, strong_scaling_flg;
+  unsigned int step_first_flg;
   unsigned int istep, iarray;
   double *wbuf;
   hid_t mspace;
@@ -49,6 +82,10 @@ void write_test
   char path[255];
 
   hid_t file, dset, fspace;
+
+  time_step *es = NULL;
+  size_t    num_in_progress;
+  hbool_t   op_failed;
 
 #ifdef VERIFY_DATA
   /* Extent of the logical 4D array and partition origin/offset */
@@ -75,6 +112,7 @@ void write_test
   }
 
 #ifdef VERIFY_DATA
+  unsigned int strong_scaling_flg;
   strong_scaling_flg = (strncmp(pconfig->scaling, "strong", 16) == 0);
 
   d[2] = strong_scaling_flg ? pconfig->rows : pconfig->rows * pconfig->proc_rows;
@@ -114,9 +152,26 @@ void write_test
 #endif
 
   *create_time -= MPI_Wtime();
-  assert((file = H5Fcreate(hdf5_filename, H5F_ACC_TRUNC, fcpl, fapl))
-         >= 0);
+#if H5_VERSION_GE(1,13,0)
+  if(es != NULL)
+    assert((file = H5Fcreate_async(hdf5_filename, H5F_ACC_TRUNC, fcpl, fapl, 0)) >= 0);
+  else
+#endif
+    assert((file = H5Fcreate(hdf5_filename, H5F_ACC_TRUNC, fcpl, fapl)) >= 0);
+
   *create_time += MPI_Wtime();
+
+  //  int timestep_cnt = pconfig->steps;
+  //for (int ts_index = 0; ts_index < timestep_cnt; ts_index++) {
+  //  time_step *ts = &(time_steps[ts_index]);
+  
+#if H5_VERSION_GE(1,13,0)
+  if (pconfig->async == 1) {
+    es    = calloc(1, sizeof(time_step));
+    es->es_data      = H5EScreate();
+    es->es_meta_data = H5EScreate();
+  }
+#endif
 
   switch (pconfig->rank)
     {
@@ -124,7 +179,7 @@ void write_test
       {
         /* a single 4D array */
         *create_time -= MPI_Wtime();
-        assert((dset = create_dataset(pconfig, file, "dataset", lcpl, dapl, coll_mpi_io_flg))
+        assert((dset = create_dataset(pconfig, file, "dataset", lcpl, dapl, coll_mpi_io_flg, es))
                >= 0);
         *create_time += MPI_Wtime();
 
@@ -146,14 +201,39 @@ void write_test
                 *create_time += MPI_Wtime();
 
                 *write_time -= MPI_Wtime();
-                assert(H5Dwrite(dset, H5T_NATIVE_DOUBLE, mspace, fspace,
-                                dxpl, wbuf) >= 0);
+#if H5_VERSION_GE(1,13,0)
+                if(es != NULL)
+                  assert(H5Dwrite_async(dset, H5T_NATIVE_DOUBLE, mspace, fspace, dxpl, wbuf, es->es_data) >= 0);
+                else
+#endif
+                  assert(H5Dwrite(dset, H5T_NATIVE_DOUBLE, mspace, fspace, dxpl, wbuf) >= 0);
+
                 *write_time += MPI_Wtime();
                 assert(H5Sclose(fspace) >= 0);
               }
+            
+            /* Simulate the compute phase */
+            if (pconfig->delay.enable == 1) {
+              if (istep != pconfig->steps - 1) { // no sleep after the last es
+                if (rank == 0)
+                  printf("Write Computing... \n");
+                async_sleep(file, fapl, pconfig->delay);
+              }
+            }
+            /* Even though we are writing the same data at each time step, normally we would need to 
+             * fill the write buffer again before outputting the next time step. Here we
+             * make sure write has completed before "filling" the write buffer again */
+#if H5_VERSION_GE(1,13,0)
+            if(es != NULL)
+              H5ESwait(es->es_data, H5ES_WAIT_FOREVER, &num_in_progress, &op_failed);
+#endif
           }
-
-        assert(H5Dclose(dset) >= 0);
+#if H5_VERSION_GE(1,13,0)
+        if(es != NULL)
+          assert(H5Dclose_async(dset, es->es_meta_data) >= 0);
+        else
+#endif
+          assert(H5Dclose(dset) >= 0); 
       }
       break;
     case 3:
@@ -164,7 +244,7 @@ void write_test
               {
                 *create_time -= MPI_Wtime();
                 sprintf(path, "step=%d", istep);
-                assert((dset = create_dataset(pconfig, file, path, lcpl, dapl, coll_mpi_io_flg))
+                assert((dset = create_dataset(pconfig, file, path, lcpl, dapl, coll_mpi_io_flg, es))
                        >= 0);
                 *create_time += MPI_Wtime();
 
@@ -182,13 +262,38 @@ void write_test
                     *create_time += MPI_Wtime();
 
                     *write_time -= MPI_Wtime();
-                    assert(H5Dwrite(dset, H5T_NATIVE_DOUBLE, mspace, fspace,
-                                    dxpl, wbuf) >= 0);
+#if H5_VERSION_GE(1,13,0)
+                    if(es != NULL)
+                      assert(H5Dwrite_async(dset, H5T_NATIVE_DOUBLE, mspace, fspace, dxpl, wbuf, es->es_data) >= 0);
+                    else
+#endif
+                      assert(H5Dwrite(dset, H5T_NATIVE_DOUBLE, mspace, fspace, dxpl, wbuf) >= 0);
+
                     *write_time += MPI_Wtime();
                     assert(H5Sclose(fspace) >= 0);
                   }
+#if H5_VERSION_GE(1,13,0)
+                if(es != NULL)
+                  assert(H5Dclose_async(dset, es->es_meta_data) >= 0);
+                else
+#endif
+                  assert(H5Dclose(dset) >= 0);
 
-                assert(H5Dclose(dset) >= 0);
+                if (pconfig->delay.enable == 1) {
+                  if (istep != pconfig->steps - 1) { // no sleep after the last es
+                    if (rank == 0)
+                      printf("Write Computing... \n");
+                    async_sleep(file, fapl, pconfig->delay);
+                  }
+                }
+                  
+                /* Even though we are writing the same data at each time step, normally we would need to 
+                 * fill the write buffer again before outputting the next time step. Here we
+                 * make sure write has completed before "filling" the write buffer again */
+#if H5_VERSION_GE(1,13,0)
+                if(es != NULL)
+                  H5ESwait(es->es_data, H5ES_WAIT_FOREVER, &num_in_progress, &op_failed);
+#endif
               }
           }
         else /* dataset per array */
@@ -203,7 +308,7 @@ void write_test
                       assert((dset = H5Dopen(file, path, dapl)) >= 0);
                     else
                       assert((dset = create_dataset(pconfig, file, path,
-                                                    lcpl, dapl, coll_mpi_io_flg)) >= 0);
+                                                    lcpl, dapl, coll_mpi_io_flg, es)) >= 0);
                     *create_time += MPI_Wtime();
 
 #ifdef VERIFY_DATA
@@ -218,12 +323,37 @@ void write_test
                     *create_time += MPI_Wtime();
 
                     *write_time -= MPI_Wtime();
-                    assert(H5Dwrite(dset, H5T_NATIVE_DOUBLE, mspace, fspace,
-                                    dxpl, wbuf) >= 0);
+#if H5_VERSION_GE(1,13,0)
+                    if(es != NULL)
+                      assert(H5Dwrite_async(dset, H5T_NATIVE_DOUBLE, mspace, fspace, dxpl, wbuf, es->es_data) >= 0);
+                    else
+#endif
+                      assert(H5Dwrite(dset, H5T_NATIVE_DOUBLE, mspace, fspace, dxpl, wbuf) >= 0);
+
                     *write_time += MPI_Wtime();
                     assert(H5Sclose(fspace) >= 0);
-                    assert(H5Dclose(dset) >= 0);
+#if H5_VERSION_GE(1,13,0)
+                    if(es != NULL)
+                      assert(H5Dclose_async(dset, es->es_meta_data) >= 0);
+                    else
+#endif
+                      assert(H5Dclose(dset) >= 0); 
                   }
+
+                if (pconfig->delay.enable == 1) {
+                  if (istep != pconfig->steps - 1) { // no sleep after the last es
+                    if (rank == 0)
+                      printf("Write Computing... \n");
+                    async_sleep(file, fapl, pconfig->delay);
+                  }
+                }
+                /* Even though we are writing the same data at each time step, normally we would need to 
+                 * fill the write buffer again before outputting the next time step. Here we
+                 * make sure write has completed before "filling" the write buffer again */
+#if H5_VERSION_GE(1,13,0)
+                if(es != NULL)
+                  H5ESwait(es->es_data, H5ES_WAIT_FOREVER, &num_in_progress, &op_failed);
+#endif
               }
           }
       }
@@ -241,7 +371,7 @@ void write_test
                         (step_first_flg ? istep : iarray),
                         (step_first_flg ? iarray : istep));
                 assert((dset = create_dataset(pconfig, file, path,
-                                              lcpl, dapl, coll_mpi_io_flg)) >= 0);
+                                              lcpl, dapl, coll_mpi_io_flg, es)) >= 0);
                 *create_time += MPI_Wtime();
 
 #ifdef VERIFY_DATA
@@ -259,20 +389,58 @@ void write_test
                 *create_time += MPI_Wtime();
 
                 *write_time -= MPI_Wtime();
-                assert(H5Dwrite(dset, H5T_NATIVE_DOUBLE, mspace, fspace,
-                                dxpl, wbuf) >= 0);
+
+#if H5_VERSION_GE(1,13,0)
+                if(es != NULL) {
+                  assert(H5Dwrite_async(dset, H5T_NATIVE_DOUBLE, mspace, fspace, dxpl, wbuf, es->es_data) >= 0);
+                }
+                else
+#endif
+                  assert(H5Dwrite(dset, H5T_NATIVE_DOUBLE, mspace, fspace, dxpl, wbuf) >= 0);
+
                 *write_time += MPI_Wtime();
                 assert(H5Sclose(fspace) >= 0);
-                H5Dclose(dset);
+#if H5_VERSION_GE(1,13,0)
+                if(es != NULL)
+                  assert(H5Dclose_async(dset, es->es_meta_data) >= 0);
+                else
+#endif
+                  assert(H5Dclose(dset) >= 0);
               }
+
+            if (pconfig->delay.enable == 1) {
+              if (istep != pconfig->steps - 1) { // no sleep after the last ts
+                if (rank == 0)
+                  printf("Write Computing... \n");
+                async_sleep(file, fapl, pconfig->delay);
+              }
+            }
+            /* Even though we are writing the same data at each time step, normally we would need to 
+             * fill the write buffer again before outputting the next time step. Here we
+             * make sure write has completed before "filling" the write buffer again */
+#if H5_VERSION_GE(1,13,0) 
+            if(es != NULL)
+              H5ESwait(es->es_data, H5ES_WAIT_FOREVER, &num_in_progress, &op_failed); 
+#endif
           }
       }
       break;
     default:
       break;
     }
+
   *create_time -= MPI_Wtime();
-  assert(H5Fclose(file) >= 0);
+#if H5_VERSION_GE(1,13,0)
+  if(es != NULL) {
+      H5ESwait(es->es_meta_data, H5ES_WAIT_FOREVER, &num_in_progress, &op_failed);
+      H5ESclose(es->es_meta_data);
+      H5ESclose(es->es_data);
+      assert(H5Fclose_async(file, 0) >= 0);
+      free(es);
+  } else
+#endif
+    assert(H5Fclose(file) >= 0);
+
   *create_time += MPI_Wtime();
   assert(H5Sclose(mspace) >= 0);
   free(wbuf);

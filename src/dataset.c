@@ -172,13 +172,21 @@ static hid_t create_fspace(const configuration* config)
  */
 
 hid_t create_dataset(const configuration* config, hid_t file, const char* name,
-                     hid_t lcpl, hid_t dapl, unsigned int coll_mpi_io_flg)
+                     hid_t lcpl, hid_t dapl, unsigned int coll_mpi_io_flg, time_step *ts)
 {
   hid_t result, fspace, dcpl;
   assert((dcpl = create_dcpl(config, coll_mpi_io_flg)) >= 0);
   assert((fspace = create_fspace(config)) >= 0);
-  assert((result = H5Dcreate(file, name, H5T_NATIVE_DOUBLE, fspace,
-                             lcpl, dcpl, dapl)) >= 0);
+
+#if H5_VERSION_GE(1,13,0)
+  if(ts != NULL) {
+    assert((result = H5Dcreate_async(file, name, H5T_NATIVE_DOUBLE, fspace,
+                                     lcpl, dcpl, dapl, ts->es_meta_create)) >= 0);
+  } else
+#endif
+    assert((result = H5Dcreate(file, name, H5T_NATIVE_DOUBLE, fspace,
+                               lcpl, dcpl, dapl)) >= 0);
+
   assert(H5Sclose(fspace) >= 0);
   assert(H5Pclose(dcpl) >= 0);
   return result;
