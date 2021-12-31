@@ -20,6 +20,20 @@
 
 #include <limits.h>
 
+typedef enum time_unit {
+    TIME_INVALID,
+    TIME_MIN,
+    TIME_SEC,
+    TIME_MS,
+    TIME_US,
+} time_unit;
+
+typedef struct duration {
+    int enable;
+    unsigned long time_num;
+    time_unit     unit;
+} duration;
+
 /* Configuration parameters */
 
 typedef struct
@@ -51,6 +65,8 @@ typedef struct
   unsigned int  HDF5perCase;
   char          compress_type[16];
   unsigned int  compress_par[2];
+  unsigned int  async;
+  duration      delay;
 } configuration;
 
 extern int handler(void* user,

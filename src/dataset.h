@@ -18,6 +18,15 @@
 
 #include "hdf5.h"
 
+typedef struct time_step time_step;
+
+struct time_step {
+    hid_t              es_meta_create;
+    hid_t              es_meta_close;
+    hid_t              es_data;
+    hid_t              es_meta_data;
+};
+
 extern hid_t create_dcpl(const configuration* config, unsigned int coll_mpi_io_flg);
 
 extern hid_t create_dataset(const configuration* config,
@@ -25,7 +34,8 @@ extern hid_t create_dataset(const configuration* config,
                             const char* name,
                             hid_t lcpl,
                             hid_t dapl,
-                            unsigned int coll_mpi_io_flg);
+                            unsigned int coll_mpi_io_flg,
+                            time_step *ts);
 
 extern int create_selection(const configuration* config,
                             hid_t fspace,
@@ -45,5 +55,9 @@ extern void verify_read_buffer(double* rbuf,
                                const size_t* my_cols,
                                size_t d[],
                                size_t o[]);
+
+extern void async_sleep(hid_t file_id, 
+                        hid_t fapl, 
+                        duration sleep_time);
 
 #endif

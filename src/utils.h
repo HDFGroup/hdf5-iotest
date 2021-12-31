@@ -42,6 +42,7 @@ typedef struct
   unsigned int imblk;
   unsigned int ifmt;
   unsigned int imod;
+  unsigned int async;
 } restart_t;
 
 void create_output_file(const char* fname);
@@ -81,5 +82,10 @@ void restart(
              hsize_t mblk_size[],
              hsize_t align_incr[]
 );
+
+
+int parse_time(char *str_in, duration *time);
+
+int parse_unit(char *str_in, unsigned long long *num, char **unit_str);
 
 #endif

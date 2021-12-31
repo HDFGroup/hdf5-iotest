@@ -59,8 +59,11 @@ int main(int argc, char* argv[])
   int icase = 0;
   int nmod = 0;
 
+  int         mpi_thread_lvl_provided = -1;
+  MPI_Init_thread(&argc, &argv, MPI_THREAD_MULTIPLE, &mpi_thread_lvl_provided);
+  assert(MPI_THREAD_MULTIPLE == mpi_thread_lvl_provided);
 
-  MPI_Init(&argc, &argv);
+  //MPI_Init(&argc, &argv);
   MPI_Comm_size(MPI_COMM_WORLD, &size);
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
@@ -76,6 +79,8 @@ int main(int argc, char* argv[])
       config.csv_file[0] = '\0';
       config.restart = 0;
       config.split = 0;
+      config.delay.time_num = 0;
+      config.async = 0;
       config.one_case = 0;
       config.HDF5perCase = 0;
       config.compress_type[0] = '\0';
