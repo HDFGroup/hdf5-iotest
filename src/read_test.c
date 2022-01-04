@@ -82,8 +82,8 @@ void read_test
 
   o[2] = strong_scaling_flg ? rank * my_rows : my_proc_row * pconfig->rows;
   o[3] = strong_scaling_flg ? rank * my_cols : my_proc_col * pconfig->cols;
-
-  printf("\nWARNING: Data verification enabled. Timings will be distorted!!!\n");
+  if (rank == 0)
+    printf("\n\033[1;31m WARNING: Data verification enabled. Timings will be distorted!!!\033[0m\n");
 #endif
 
 #if H5_VERSION_GE(1,13,0)
