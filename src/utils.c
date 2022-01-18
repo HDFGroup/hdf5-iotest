@@ -352,6 +352,11 @@ void restart(
           ptr = strtok(NULL, delim);
         }
     }
+  else {
+    /* Could not open restart file */
+    printf("ERROR: failed to open restart file %s\n", fname);
+    MPI_Abort(MPI_COMM_WORLD, 1);
+  }
 
   /* Repeating the last successful configuration,
      so remove the last line to avoid duplicate lines */
