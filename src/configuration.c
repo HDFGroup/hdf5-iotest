@@ -135,8 +135,8 @@ int check_options
   } else if (MATCH(section, "restart")) {
     pconfig->restart = (unsigned int) atol(value);
   } else if (MATCH(section, "async")) {
-#if !H5_VERSION_GE(1,13,0)
-      printf("ASYNC only supported for HDF5 version > 1.12 \n");
+#if !H5_VERSION_GE(1,14,0)
+      printf("ASYNC only supported for HDF5 version >= 1.14 \n");
       return 0;
 #endif
       pconfig->async = (unsigned int) atol(value);
