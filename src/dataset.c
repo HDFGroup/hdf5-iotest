@@ -178,7 +178,7 @@ hid_t create_dataset(const configuration* config, hid_t file, const char* name,
   assert((dcpl = create_dcpl(config, coll_mpi_io_flg)) >= 0);
   assert((fspace = create_fspace(config)) >= 0);
 
-#if H5_VERSION_GE(1,13,0)
+#if H5_VERSION_GE(1,14,0)
   if(ts != NULL) {
     assert((result = H5Dcreate_async(file, name, H5T_NATIVE_DOUBLE, fspace,
                                      lcpl, dcpl, dapl, ts->es_meta_create)) >= 0);

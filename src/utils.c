@@ -211,7 +211,7 @@ herr_t set_libver_bounds(configuration* pconfig, int rank, hid_t fapl)
   H5F_libver_t low = H5F_LIBVER_EARLIEST, high = H5F_LIBVER_LATEST;
   unsigned majnum, minnum, relnum;
   assert((result = H5get_libversion(&majnum, &minnum, &relnum)) >= 0);
-  assert (majnum == 1 && minnum >= 8 && minnum <= 13);
+  assert (majnum == 1 && minnum >= 8 && minnum <= 15);
 
   if (strncmp(pconfig->libver_bound_low, "earliest", 16) != 0)
     {
@@ -228,8 +228,14 @@ herr_t set_libver_bounds(configuration* pconfig, int rank, hid_t fapl)
       low = H5F_LIBVER_LATEST;
 #endif
       else if (strncmp(pconfig->libver_bound_low, "v112", 16) == 0)
-#if H5_VERSION_GE(1,13,0)
+#if H5_VERSION_GE(1,14,0)
         low = H5F_LIBVER_V112;
+#else
+      low = H5F_LIBVER_LATEST;
+#endif
+      else if (strncmp(pconfig->libver_bound_low, "v114", 16) == 0)
+#if H5_VERSION_GE(1,15,0)
+        low = H5F_LIBVER_V114;
 #else
       low = H5F_LIBVER_LATEST;
 #endif
@@ -252,8 +258,14 @@ herr_t set_libver_bounds(configuration* pconfig, int rank, hid_t fapl)
       high = H5F_LIBVER_LATEST;
 #endif
       else if (strncmp(pconfig->libver_bound_high, "v112", 16) == 0)
-#if H5_VERSION_GE(1,13,0)
+#if H5_VERSION_GE(1,14,0)
         high = H5F_LIBVER_V112;
+#else
+      high = H5F_LIBVER_LATEST;
+#endif
+      else if (strncmp(pconfig->libver_bound_high, "v114", 16) == 0)
+#if H5_VERSION_GE(1,15,0)
+        high = H5F_LIBVER_V114;
 #else
       high = H5F_LIBVER_LATEST;
 #endif
