@@ -44,6 +44,7 @@ jobs:
     - name: Install Dependencies (Linux--HDF5-release)
       if: matrix.hdf5 == 'release'
       run: |
+        sudo apt-get update #for some reason step "Update repository code" is not running.
         sudo apt-get install -qq mpich
         sudo apt-get install -qq libhdf5-mpich-dev
         # Set env vars
@@ -55,6 +56,7 @@ jobs:
       if: matrix.hdf5 == 'develop'
       run: |
         # Use the newest stable gcc compiler
+        sudo apt-get update #for some reason step "Update repository code" is not running.
         sudo apt-get install automake autoconf libtool libtool-bin
         sudo apt-get install -qq mpich
         echo "CC=mpicc" >> $GITHUB_ENV
