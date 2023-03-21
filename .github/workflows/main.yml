@@ -34,6 +34,11 @@ jobs:
     # Steps represent a sequence of tasks that will be executed 
     # as part of the job.
     steps:
+    - name: Check out repository code
+      uses: actions/checkout@v3
+    - name: Update repository code
+        run: |
+          sudo apt-get update
     - name: Install Dependencies (Linux--HDF5-release)
       if: matrix.hdf5 == 'release'
       run: |
@@ -68,10 +73,6 @@ jobs:
         export HDF5_DIR=$mydir/hdf5/hdf5
         echo "CPPFLAGS=-I$HOME_DIR/hdf5/include" >> $GITHUB_ENV
         echo "LDFLAGS=-L$HOME_DIR/hdf5/lib" >> $GITHUB_ENV
-
- # Checks-out the repository under $GITHUB_WORKSPACE so the job can access it.
-    - name: Get Sources
-      uses: actions/checkout@v3
 
 ##################################
 # CONFIGURE (Autotools)
