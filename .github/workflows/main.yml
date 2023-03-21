@@ -36,9 +36,11 @@ jobs:
     steps:
     - name: Check out repository code
       uses: actions/checkout@v3
+
     - name: Update repository code
-        run: |
-          sudo apt-get update
+      run: |
+        sudo apt-get update
+
     - name: Install Dependencies (Linux--HDF5-release)
       if: matrix.hdf5 == 'release'
       run: |
