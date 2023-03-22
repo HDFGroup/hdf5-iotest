@@ -109,6 +109,7 @@ While it can be built manually, we recommend building =hdf5_iotest= from [[https
        depends_on('m4',       type='build')
        depends_on('mpi')
        depends_on('hdf5')
+       depends_on('util-linux-uuid')
 
        def configure_args(self):
            args = []
