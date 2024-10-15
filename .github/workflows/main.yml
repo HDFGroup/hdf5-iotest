@@ -40,6 +40,7 @@ jobs:
     - name: Update repository code
       run: |
         sudo apt-get update
+        sudo apt-get install uuid-dev
 
     - name: Install Dependencies (Linux--HDF5-release)
       if: matrix.hdf5 == 'release'
