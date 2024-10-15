@@ -211,7 +211,11 @@ herr_t set_libver_bounds(configuration* pconfig, int rank, hid_t fapl)
   H5F_libver_t low = H5F_LIBVER_EARLIEST, high = H5F_LIBVER_LATEST;
   unsigned majnum, minnum, relnum;
   assert((result = H5get_libversion(&majnum, &minnum, &relnum)) >= 0);
-  assert (majnum == 1 && minnum >= 8 && minnum <= 15);
+  /*
+    This might be better as a compile-time assert. Remove the check
+    and reintroduce it after finalizing semantic versioning in HDF5.
+    assert (majnum == 1 && minnum >= 8 && minnum <= 15);
+  */
 
   if (strncmp(pconfig->libver_bound_low, "earliest", 16) != 0)
     {
