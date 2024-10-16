@@ -71,6 +71,7 @@ jobs:
         --disable-tests --disable-tools \
         --prefix=$HOME_DIR/hdf5 \
         --enable-parallel
+        cat config.log
         make -j 8 install
         mydir="$PWD"
         export HDF5_DIR=$mydir/hdf5/hdf5
