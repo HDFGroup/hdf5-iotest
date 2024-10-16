@@ -88,7 +88,9 @@ jobs:
         mkdir build; cd build
         echo "void main(void){}" > junk.c
         echo "$CPPFLAGS"
-        ls $HDF5_DIR/bin/h5pcc
+        ls -aolF $HDF5_DIR/*
+        ls -aolF $HDF5_DIR/bin
+        ls -aolF $HDF5_DIR/bin/h5pcc
         $HDF5_DIR/bin/h5pcc junk.c
         CC=$HDF5_DIR/bin/h5pcc ../configure --prefix=$GITHUB_WORKSPACE/build
       shell: bash
