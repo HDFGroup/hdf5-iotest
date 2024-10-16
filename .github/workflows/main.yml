@@ -73,7 +73,7 @@ jobs:
         --enable-parallel
         make -j 8 install
         mydir="$PWD"
-        export HDF5_DIR=$mydir/hdf5/hdf5
+        echo "HDF5_DIR=$mydir/hdf5/hdf5" >> $GITHUB_ENV
         echo "CPPFLAGS=-I$HOME_DIR/hdf5/include" >> $GITHUB_ENV
         echo "LDFLAGS=-L$HOME_DIR/hdf5/lib" >> $GITHUB_ENV
 
