@@ -35,7 +35,7 @@ jobs:
     # as part of the job.
     steps:
     - name: Check out repository code
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4.1.7
 
     - name: Update repository code
       run: |
@@ -73,9 +73,9 @@ jobs:
         --enable-parallel
         make -j 8 install
         mydir="$PWD"
-        echo "HDF5_DIR=$mydir/hdf5/hdf5" >> $GITHUB_ENV
-        echo "CPPFLAGS=-I$HOME_DIR/hdf5/include" >> $GITHUB_ENV
-        echo "LDFLAGS=-L$HOME_DIR/hdf5/lib" >> $GITHUB_ENV
+        echo "HDF5_DIR=$HOME_DIR/hdf5" >> $GITHUB_ENV
+        echo "CPPFLAGS=-I$HDF5_DIR/include" >> $GITHUB_ENV
+        echo "LDFLAGS=-L$HDF5_DIR/lib" >> $GITHUB_ENV
 
 ##################################
 # CONFIGURE (Autotools)
