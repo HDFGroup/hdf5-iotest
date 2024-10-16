@@ -85,7 +85,7 @@ jobs:
       run: |
         ./autogen.sh
         mkdir build; cd build
-        ../configure --prefix=$GITHUB_WORKSPACE/build
+       CC=$HDF5_DIR/bin/h5pcc ../configure --prefix=$GITHUB_WORKSPACE/build
       shell: bash
 
 ##################################
