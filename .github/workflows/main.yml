@@ -71,7 +71,6 @@ jobs:
         --disable-tests --disable-tools \
         --prefix=$HOME_DIR/hdf5 \
         --enable-parallel
-        cat config.log
         make -j 8 install
         mydir="$PWD"
         export HDF5_DIR=$mydir/hdf5/hdf5
@@ -87,6 +86,7 @@ jobs:
         ./autogen.sh
         mkdir build; cd build
         CC=$HDF5_DIR/bin/h5pcc ../configure --prefix=$GITHUB_WORKSPACE/build
+        cat config.log
       shell: bash
 
 ##################################
