@@ -65,13 +65,13 @@ jobs:
         ##################################
         git clone https://github.com/HDFGroup/hdf5.git
         export HOME_DIR=$(echo ~)
-        export HDF5_DIR=$HOME_DIR/hdf5
-        echo "HDF5_DIR=$HDF5_DIR" >> $GITHUB_ENV
         cd hdf5
+        export HDF5_DIR=$PWD/hdf5
+        echo "HDF5_DIR=$HDF5_DIR" >> $GITHUB_ENV
         ./autogen.sh
         ./configure --enable-build-mode=debug --without-szlib --disable-fortran --disable-hl \
         --disable-tests \
-        --prefix=$HDF5_DIR/hdf5 \
+        --prefix=$HDF5_DIR \
         --enable-parallel
         make -j 8 install
         mydir="$PWD"
