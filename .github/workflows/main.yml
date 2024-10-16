@@ -65,7 +65,8 @@ jobs:
         ##################################
         git clone https://github.com/HDFGroup/hdf5.git
         export HOME_DIR=$(echo ~)
-        echo "HDF5_DIR=$HOME_DIR/hdf5" >> $GITHUB_ENV
+        export HDF5_DIR=$HOME_DIR/hdf5
+        echo "HDF5_DIR=$HDF5_DIR" >> $GITHUB_ENV
         cd hdf5
         ./autogen.sh
         ./configure --enable-build-mode=debug --without-szlib --disable-fortran --disable-hl \
