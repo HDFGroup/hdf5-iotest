@@ -70,7 +70,7 @@ jobs:
         echo "HDF5_DIR=$HDF5_DIR" >> $GITHUB_ENV
         ./autogen.sh
         ./configure --enable-build-mode=debug --without-szlib --disable-fortran --disable-hl \
-        --disable-tests \
+        --disable-tests --disable-tools \
         --prefix=$HDF5_DIR \
         --enable-parallel
         make -j 8 install
