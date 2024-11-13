@@ -58,7 +58,6 @@ jobs:
         # Use the newest stable gcc compiler
         sudo apt-get install automake autoconf libtool libtool-bin
         sudo apt-get install -qq mpich
-        echo "CC=mpicc" >> $GITHUB_ENV
 
         ##################################
         # INSTALL HDF5 FROM SOURCE
@@ -69,7 +68,7 @@ jobs:
         export HDF5_DIR=$PWD/hdf5
         echo "HDF5_DIR=$HDF5_DIR" >> $GITHUB_ENV
         ./autogen.sh
-        ./configure --enable-build-mode=debug --without-szlib --disable-fortran --disable-hl \
+        CC=mpicc ./configure --enable-build-mode=debug --without-szlib --disable-fortran --disable-hl \
         --disable-tests --disable-tools \
         --prefix=$HDF5_DIR \
         --enable-parallel
@@ -77,9 +76,7 @@ jobs:
         mydir="$PWD"
         echo "CPPFLAGS=-I$HDF5_DIR/include" >> $GITHUB_ENV
         echo "LDFLAGS=-L$HDF5_DIR/lib" >> $GITHUB_ENV
-        ls -aolF $HDF5_DIR/*
-        ls -aolF $HDF5_DIR/bin
-        ls -aolF $HDF5_DIR/bin/h5pcc
+        echo "CC=$HDF5_DIR/bin/h5pcc" >> $GITHUB_ENV
 
 ##################################
 # CONFIGURE (Autotools)
@@ -89,10 +86,7 @@ jobs:
       run: |
         ./autogen.sh
         mkdir build; cd build
-        echo "void main(void){}" > junk.c
-        echo "$CPPFLAGS"
-        $HDF5_DIR/bin/h5pcc junk.c
-        CC=$HDF5_DIR/bin/h5pcc ../configure --prefix=$GITHUB_WORKSPACE/build
+        ../configure --prefix=$GITHUB_WORKSPACE/build
       shell: bash
 
 ##################################
