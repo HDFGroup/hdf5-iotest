@@ -4,9 +4,9 @@ name: hdf5-iotest
 #Triggers the workflow on push or pull requests.
 on: 
   push:
-    branches: [ liblink ]
+    branches: [ master ]
   pull_request:
-    branches: [ liblink ]
+    branches: [ master ]
 
 # A workflow run is made up of one or more jobs that
 # can run sequentially or in parallel
