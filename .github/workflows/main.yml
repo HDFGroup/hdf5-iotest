@@ -51,8 +51,9 @@ jobs:
         echo "CC=mpicc" >> $GITHUB_ENV
         echo "CPPFLAGS=-I/usr/include/hdf5/mpich" >> $GITHUB_ENV
         echo "LDFLAGS=-L/usr/lib/x86_64-linux-gnu/hdf5/mpich" >> $GITHUB_ENV
-        echo "LD_LIBRARY_PATH=-L/usr/lib/x86_64-linux-gnu/hdf5/mpich" >> $GITHUB_ENV
+        #echo "LD_LIBRARY_PATH=/usr/lib/x86_64-linux-gnu/hdf5/mpich" >> $GITHUB_ENV
         echo "LIBS=-lhdf5" >> $GITHUB_ENV
+        ls /usr/lib/x86_64-linux-gnu/hdf5/mpich
 
     - name: Install Dependencies (Linux--HDF5-develop)
       if: matrix.hdf5 == 'develop'
