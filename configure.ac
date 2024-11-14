@@ -14,4 +14,12 @@ AM_INIT_AUTOMAKE([foreign])
 
 AC_CONFIG_FILES([Makefile src/Makefile])
 
+# Checks for libraries.
+PKG_CHECK_MODULES([uuid], [uuid],
+                  [], [AC_MSG_ERROR([Could not find libuuid])])
+
+# Checks for header files.
+AC_CHECK_HEADER([uuid/uuid.h], [],
+                [AC_MSG_ERROR([Couldn't find uuid/uuid.h])])
+
 AC_OUTPUT
