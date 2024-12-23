@@ -165,7 +165,7 @@ int main(int argc, char* argv[])
   /* test collective and independent modes when parallel, and greater than 0 ranks */
   if (size > 1) nmod = 1;
 
-  char hdf5_filename[strlen(config.hdf5_file+4)];
+  char hdf5_filename[strlen(config.hdf5_file)+1];
 
   /* use a macro to stop the indentation madness */
 
@@ -312,7 +312,7 @@ int main(int argc, char* argv[])
   if (rank == 0)
     print_current_config(&config);
 
-  strcpy( hdf5_filename, config.hdf5_file);
+  strncpy( hdf5_filename, config.hdf5_file, strlen(config.hdf5_file) + 1);
 
   if(config.HDF5perCase != 0)
     {
